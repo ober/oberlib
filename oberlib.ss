@@ -99,18 +99,15 @@
 (def (success? status)
   (and (>= status 200) (<= status 299)))
 
-
-(def (do-delete uri headers params)
-  (dp (print-curl "delete" uri headers params))
+(def (do-delete uri headers)
   (let* ((reply (http-delete uri
-			     headers: headers
-			     params: params))
+                             headers: headers))
 	 (status (request-status reply))
 	 (text (request-text reply)))
-
+    (print-curl "delete" uri "" "")
     (if (success? status)
-      (displayln text)
-      (displayln (format "Failure on delete. Status:~a Text:~a~%" status text)))))
+      text
+      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
 (def (stringify-hash h)
   (let ((results []))
