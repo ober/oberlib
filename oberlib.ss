@@ -172,33 +172,6 @@
 (def (success? status)
   (and (>= status 200) (<= status 299)))
 
-(def (do-post uri headers data)
-  (dp (print-curl "post" uri headers data))
-  (try
-   (let* ((reply (http-post uri
-			    headers: headers
-			    data: data))
-	  (status (request-status reply))
-	  (text (request-text reply)))
-
-     (if (success? status)
-       (displayln status text)
-       (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
-   (catch (e)
-     (begin
-       (display-exception e)))))
-
-(def (do-put uri headers data)
-  (dp (print-curl "put" uri headers data))
-  (let* ((reply (http-put uri
-			  headers: headers
-			  data: data))
-	 (status (request-status reply))
-	 (text (request-text reply)))
-
-    (if (success? status)
-      (displayln text)
-      (displayln (format "Failure on post. Status:~a Text:~a~%" status text)))))
 
 (def (do-delete uri headers params)
   (dp (print-curl "delete" uri headers params))
@@ -218,10 +191,9 @@
       (begin
 	(hash-for-each
 	 (lambda (k v)
-	   (set! results (append results (list (format " ~a->" k) (format "~a   " v)))))
+	   (set! results (append results [ (format " ~a->" k) (format "~a   " v)])))
 	 h)
 	(append-strings results))
-      ;;        (pregexp-replace "\n" (append-strings results) "\t"))
       "N/A")))
 
 (def (print-curl type uri headers data)
@@ -243,6 +215,33 @@
        (else
 	(displayln "unknown format " type))))))
 
+(def (do-get-generic uri headers)
+  (let* ((reply (http-get uri
+			  headers: headers))
+	 (status (request-status reply))
+	 (text (request-text reply)))
+    (print-curl "get" uri "" "")
+    (if (success? status)
+      text
+      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+
+(def (do-post uri headers data)
+  (dp (print-curl "post" uri headers data))
+  (try
+   (let* ((reply (http-post uri
+			    headers: headers
+			    data: data))
+	  (status (request-status reply))
+	  (text (request-text reply)))
+
+     (if (success? status)
+       (displayln status text)
+       (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
+   (catch (e)
+     (begin
+       (display-exception e)))))
+
+
 (def (do-get uri)
   (print-curl "get" uri "" "")
   (let* ((reply (http-get uri))
@@ -263,12 +262,9 @@
       text
       (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
 
-(def (do-get-generic uri headers)
-  (let* ((reply (http-get uri
-			  headers: headers))
-	 (status (request-status reply))
-	 (text (request-text reply)))
-    (print-curl "get" uri "" "")
-    (if (success? status)
-      text
-      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+(def (do-put uri headers data)
+  (dp (print-curl "put" uri headers data))
+  (let* ((reply (http-put uri
+			  headers: headers
+			  data: data)))
+    reply))
