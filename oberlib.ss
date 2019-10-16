@@ -310,3 +310,8 @@
   (format "Basic ~a"
           (base64-encode
            (string->utf8 (format "~a:~a" user password)))))
+
+(def (def-num num)
+  (if (string? num)
+    (string->number num)
+    num))
