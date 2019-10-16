@@ -52,74 +52,6 @@
     ;;    (displayln "fss: delta: " delta " string: " string " our-size: " our-size " size: " size)
     (format " ~a~a" string (make-string delta #\space))))
 
-(def (style-output infos)
-  (when (list? infos)
-    (let* ((sizes (hash))
-           (data (reverse infos))
-           (header (car data))
-           (rows (cdr data)))
-      (for (head header)
-           (unless (string? head) (displayln "head is not string: " head) (exit 2))
-           (hash-put! sizes head (string-length head)))
-      (for (row rows)
-           (let (count 0)
-             (for (column row)
-                  (let* ((col-name (nth count header))
-                         (current-size (hash-ref sizes col-name))
-                         (this-size (if (string? column) (string-length column) (string-length (format "~a" column)))))
-                    (when (> this-size current-size)
-                      (hash-put! sizes col-name this-size))
-                    ;;		      (displayln "colname: " col-name " col: " count " current-size: " current-size " this-size: " this-size " column: " column)
-                    (set! count (1+ count))))))
-
-      (for (head header)
-           (display (format "| ~a" (format-string-size head (hash-get sizes head)))))
-
-      ;; print header
-      (displayln "|")
-      (let ((count 0))
-        (for (head header)
-             (let ((sep (if (= count 0) "|" "+")))
-               (display (format "~a~a" sep (make-string (+ 2 (hash-get sizes (nth count header))) #\-))))
-             (set! count (1+ count))))
-      (displayln "|")
-
-      (for (row rows)
-           (let (count 0)
-             (for (col row)
-                  (display (format "|~a " (format-string-size col (hash-ref sizes (nth count header)))))
-                  (set! count (1+ count))))
-           (displayln "|"))
-      )))
-
-(def (print-header style header)
-  (cond
-   ((string=? style "org-mode")
-    (displayln "| " (string-join header " | ") " |")
-    (displayln "|-|"))
-   (else
-    (displayln "Unknown format: " style))))
-
-(def (print-row style data)
-  (if (list? data)
-    (cond
-     ((string=? style "org-mode")
-      (org-mode-print-row data))
-     (else
-      (displayln "Unknown format! " style)))))
-
-(def (org-mode-print-row data)
-  (when (list? data)
-    (for (datum data)
-         (printf "| ~a " datum))
-    (displayln "|")))
-
-(def (resolve-ipv4 host)
-  (let* ((host-info (host-info-addresses (host-info host))))
-    (dp (format "host-info: ~a type:~a" host-info (type-of host-info)))
-    (ip4-address->string
-     (car host-info))))
-
 (def (dp msg)
   (when DEBUG
     (displayln msg)))
@@ -163,11 +95,6 @@
    "\""
    str
    ""))
-
-(def (make-basic-auth user password)
-  (format "Basic ~a"
-	  (base64-encode
-	   (string->utf8 (format "~a:~a" user password)))))
 
 (def (success? status)
   (and (>= status 200) (<= status 299)))
@@ -241,7 +168,6 @@
      (begin
        (display-exception e)))))
 
-
 (def (do-get uri)
   (print-curl "get" uri "" "")
   (let* ((reply (http-get uri))
@@ -268,3 +194,122 @@
 			  headers: headers
 			  data: data)))
     reply))
+
+(def (remove-bad-matches vars omit)
+  (let ((goodies []))
+    (for (var vars)
+         (unless (string-contains var omit)
+           (set! goodies (flatten (cons var goodies)))))
+    (reverse goodies)))
+
+(def (interpol str)
+  (displayln (interpol-from-env str)))
+
+(def (interpol-from-env str)
+  (if (not (string? str))
+    str
+    (let* ((ruby (pregexp "#\\{([a-zA-Z0-9_-]*)\\}"))
+           (vars (remove-bad-matches (match-regexp ruby str) "#"))
+           (newstr (pregexp-replace* ruby str "~a"))
+           (set-vars []))
+
+      (for (var vars)
+           (let ((val (getenv var #f)))
+             (if (not val)
+               (begin
+                 (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
+                 (exit 2))
+               (set! set-vars (cons val set-vars)))))
+      (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+      (apply format newstr set-vars))))
+
+(def (match-regexp pat str . opt-args)
+  "Like pregexp-match but for all matches til end of str"
+  (let ((n (string-length str))
+        (ix-prs []))
+    (let lp ((start 0))
+      (let* ((pp (pregexp-match-positions pat str start n))
+             (ix-pr (pregexp-match pat str start n)))
+        (if ix-pr
+          (let ((pos (+ 1 (cdar pp))))
+            (set! ix-prs (flatten (cons ix-pr ix-prs)))
+            (if (< pos n)
+              (lp pos)
+              ix-prs))
+          (reverse ix-prs))))))
+
+(def (style-output infos)
+  (when (list? infos)
+    (let* ((sizes (hash))
+           (data (reverse infos))
+           (header (car data))
+           (rows (cdr data)))
+      (for (head header)
+           (unless (string? head) (displayln "head is not string: " head) (exit 2))
+           (hash-put! sizes head (string-length head)))
+      (for (row rows)
+           (let (count 0)
+             (for (column row)
+                  (let* ((col-name (nth count header))
+                         (current-size (hash-ref sizes col-name))
+                         (this-size (if (string? column) (string-length column) (string-length (format "~a" column)))))
+                    (when (> this-size current-size)
+                      (hash-put! sizes col-name this-size))
+                    ;;		      (displayln "colname: " col-name " col: " count " current-size: " current-size " this-size: " this-size " column: " column)
+                    (set! count (1+ count))))))
+
+      (for (head header)
+           (display (format "| ~a" (format-string-size head (hash-get sizes head)))))
+
+      ;; print header
+      (displayln "|")
+      (let ((count 0))
+        (for (head header)
+             (let ((sep (if (= count 0) "|" "+")))
+               (display (format "~a~a" sep (make-string (+ 2 (hash-get sizes (nth count header))) #\-))))
+             (set! count (1+ count))))
+      (displayln "|")
+
+      (for (row rows)
+           (let (count 0)
+             (for (col row)
+                  (display (format "|~a " (format-string-size col (hash-ref sizes (nth count header)))))
+                  (set! count (1+ count))))
+           (displayln "|"))
+      )))
+
+(def (print-header style header)
+  (cond
+   ((string=? style "org-mode")
+    (displayln "| " (string-join header " | ") " |")
+    (displayln "|-|"))
+   (else
+    (displayln "Unknown format: " style))))
+
+(def (print-row style data)
+  (if (list? data)
+    (cond
+     ((string=? style "org-mode")
+      (org-mode-print-row data))
+     (else
+      (displayln "Unknown format! " style)))))
+
+(def (org-mode-print-row data)
+  (when (list? data)
+    (for (datum data)
+         (printf "| ~a " datum))
+    (displayln "|")))
+
+(def (date->custom dt)
+  (date->string (string->date dt "~Y-~m-~dT~H:~M:~S~z") "~a ~b ~d ~Y"))
+
+(def (resolve-ipv4 host)
+  (let* ((host-info (host-info-addresses (host-info host))))
+    (dp (format "host-info: ~a type:~a" host-info (type-of host-info)))
+    (ip4-address->string
+     (car host-info))))
+
+(def (make-basic-auth user password)
+  (format "Basic ~a"
+          (base64-encode
+           (string->utf8 (format "~a:~a" user password)))))
