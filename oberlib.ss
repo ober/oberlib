@@ -317,3 +317,9 @@
   (if (string? num)
     (string->number num)
     num))
+
+
+(def (sis item)
+  (if item
+    item
+    "N/A"))
