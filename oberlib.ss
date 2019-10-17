@@ -120,7 +120,7 @@
 	(append-strings results))
       "N/A")))
 
-(def (hash->str stringify-hash))
+(def (hash->str (h) (stringify-hash h)))
 
 (def (print-curl type uri headers data)
   ;;(displayln headers)
