@@ -41,10 +41,13 @@
 (import (rename-in :gerbil/gambit/os (time mytime)))
 
 
+(def (strip-both string)
+  (pregexp-replace "\ +$" (pregexp-replace "^\ +" string "") ""))
+
 (def (format-string-size string size)
   (unless (string? string)
     (set! string (format "~a" string)))
-  (let* ((string (string-trim-both string))
+  (let* ((string (strip-both string))
          (our-size (string-length string))
          (delta (if (> size our-size)
                   (- size our-size)
