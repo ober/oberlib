@@ -40,10 +40,12 @@
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
 
-
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
-  (pregexp-replace "\ +$" (pregexp-replace "^\ +" string "") ""))
+  (if (and (string? string)
+           (> (string-length string) 1))
+    (pregexp-replace "\ +$" (pregexp-replace "^\ +" string "") "")
+    string))
 
 (def (format-string-size string size)
   (unless (string? string)
