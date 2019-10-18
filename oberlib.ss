@@ -165,11 +165,10 @@
 	  (text (request-text reply)))
 
      (if (success? status)
-       (displayln status text)
+       text
        (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
    (catch (e)
-     (begin
-       (display-exception e)))))
+     (display-exception e))))
 
 (def (do-get uri)
   (print-curl "get" uri "" "")
