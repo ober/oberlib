@@ -42,6 +42,7 @@
 
 
 (def (strip-both string)
+  "Safely strip leading, and trailing whitespace"
   (pregexp-replace "\ +$" (pregexp-replace "^\ +" string "") ""))
 
 (def (format-string-size string size)
