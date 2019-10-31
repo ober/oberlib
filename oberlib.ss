@@ -38,6 +38,7 @@
 
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
+(declare (not optimize-dead-definitions))
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
