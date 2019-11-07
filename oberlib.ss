@@ -323,8 +323,48 @@
     (string->number num)
     num))
 
-
 (def (sis item)
   (if item
     item
     "N/A"))
+
+;; read-password provided by @feeley
+(def (raw-mode tty)
+     (tty-mode-set! tty
+                 #f ;; input-allow-special
+                 #f ;; input-echo
+                 #t ;; input-raw
+                 #t ;; output-raw
+                 0)) ;; speed
+
+(def (cooked-mode tty)
+  (tty-mode-set! tty
+                 #t ;; input-allow-special
+                 #t ;; input-echo
+                 #f ;; input-raw
+                 #f ;; output-raw
+                 0)) ;; speed
+
+(def (read-password)
+  (let ((tty (console-port)))
+    (raw-mode tty)
+    (let loop ((chars []))
+      (let ((c (read-char tty)))
+        (cond ((or (eof-object? c)
+                   (char=? c #\return)
+                   (char=? c #\newline))
+               (cooked-mode tty)
+               (display "\n" tty)
+               (list->string (reverse chars)))
+              ((or (char=? c #\backspace)
+                   (char=? c #\delete))
+               (if (pair? chars)
+                 (begin
+                   (display "\b \b" tty)
+                   (loop (cdr chars)))
+                 (loop chars)))
+              (else
+               (display "*" tty)
+               (loop (cons c chars))))))))
+
+;; read-password provided by @feeley
