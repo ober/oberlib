@@ -330,18 +330,18 @@
 
 ;; read-password provided by @feeley
 (def (raw-mode tty)
-     (tty-mode-set! tty
-                 #f ;; input-allow-special
-                 #f ;; input-echo
-                 #t ;; input-raw
-                 #t)) ;; output-raw
+  (##tty-mode-set! tty
+                   #f ;; input-allow-special
+                   #f ;; input-echo
+                   #t ;; input-raw
+                   #t)) ;; output-raw
 
 (def (cooked-mode tty)
-  (tty-mode-set! tty
-                 #t ;; input-allow-special
-                 #t ;; input-echo
-                 #f ;; input-raw
-                 #f)) ;; output-raw
+  (##tty-mode-set! tty
+                   #t ;; input-allow-special
+                   #t ;; input-echo
+                   #f ;; input-raw
+                   #f)) ;; output-raw
 
 (def (read-password)
   (let ((tty (console-port)))
