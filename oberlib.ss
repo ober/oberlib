@@ -334,16 +334,14 @@
                  #f ;; input-allow-special
                  #f ;; input-echo
                  #t ;; input-raw
-                 #t ;; output-raw
-                 0)) ;; speed
+                 #t)) ;; output-raw
 
 (def (cooked-mode tty)
   (tty-mode-set! tty
                  #t ;; input-allow-special
                  #t ;; input-echo
                  #f ;; input-raw
-                 #f ;; output-raw
-                 0)) ;; speed
+                 #f)) ;; output-raw
 
 (def (read-password)
   (let ((tty (console-port)))
