@@ -330,7 +330,7 @@
     "N/A"))
 
 ;; read-password provided by @feeley
-(define (raw-mode tty)
+(def (raw-mode tty)
   (##tty-mode-set! tty
                  #f ;; input-allow-special
                  #f ;; input-echo
@@ -338,7 +338,7 @@
                  #t ;; output-raw
                  0)) ;; speed
 
-(define (cooked-mode tty)
+(def (cooked-mode tty)
   (##tty-mode-set! tty
                  #t ;; input-allow-special
                  #t ;; input-echo
@@ -346,9 +346,9 @@
                  #f ;; output-raw
                  0)) ;; speed
 
-(define (read-password tty)
+(def (read-password tty)
   (raw-mode tty)
-  (let loop ((chars '()))
+  (let loop ((chars []))
     (let ((c (read-char tty)))
       (cond ((or (eof-object? c)
                  (char=? c #\return)
