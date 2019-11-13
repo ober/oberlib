@@ -366,3 +366,24 @@
             (else
              (display "*" tty)
              (loop (cons c chars)))))))
+
+(def (filter-headers headers fields)
+  (let ((ours headers))
+    (for (header headers)
+         (unless (member header fields)
+           (displayln "removing " header)
+           (delete! header ours)))
+    ours))
+
+(def (filter-row name value headers)
+  (when (member name headers)
+    value))
+
+(def (filter-row-hash row fields)
+  (let ((final []))
+    (for (field fields)
+         (let ((value (hash-get row field)))
+           (if value
+             (set! final (cons value final))
+             (displayln "Field " field " was requested but not found in fields hash "))))
+    (reverse final)))
