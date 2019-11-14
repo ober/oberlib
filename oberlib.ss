@@ -385,5 +385,5 @@
          (let ((value (hash-get row field)))
            (if value
              (set! final (cons value final))
-             (displayln "Field " field " was requested but not found in fields hash "))))
+             (dp (format "Field ~a was requested but not found in fields hash" field)))))
     (reverse final)))
