@@ -387,3 +387,9 @@
              (set! final (cons value final))
              (dp (format "Field ~a was requested but not found in fields hash" field)))))
     (reverse final)))
+
+(def (uri-encode str)
+  "Interface to encode a string for uri encodings, and stuff"
+  (let ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
+        (safe-word (write-uri-encoded str uri-encoding)))
+    safe-word))
