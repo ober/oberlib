@@ -407,6 +407,6 @@
               (write-hex (##fxand byte #xf))))
             (lp (##fx+ n 1)))))))
 
-  (let ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
+  (let* ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
         (safe-word (write-uri-encoded str uri-encoding)))
     safe-word))
