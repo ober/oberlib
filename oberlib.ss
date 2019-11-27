@@ -390,6 +390,23 @@
 
 (def (uri-encode str)
   "Interface to encode a string for uri encodings, and stuff"
+  (def (write-uri-encoded str encoding)
+    (def (write-hex n)
+      (write-char (##string-ref "0123456789ABCDEF" n)))
+
+    (let* ((utf8 (string->utf8 str))
+           (len  (u8vector-length utf8)))
+      (let lp ((n 0))
+        (when (##fx< n len)
+          (let (byte (##u8vector-ref utf8 n))
+            (cond
+             ((##vector-ref encoding byte) => write-char)
+             (else
+              (write-char #\%)
+              (write-hex (##fxand (##fxarithmetic-shift byte -4) #xf))
+              (write-hex (##fxand byte #xf))))
+            (lp (##fx+ n 1)))))))
+
   (let ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
         (safe-word (write-uri-encoded str uri-encoding)))
     safe-word))
