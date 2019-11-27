@@ -388,7 +388,7 @@
              (dp (format "Field ~a was requested but not found in fields hash" field)))))
     (reverse final)))
 
-(def (uri-encode str)
+(def (web-encode str)
   "Interface to encode a string for uri encodings, and stuff"
   (def (write-uri-encoded str encoding)
     (def (write-hex n)
