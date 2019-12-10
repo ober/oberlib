@@ -299,7 +299,7 @@
           ((string=? style "org-mode")
            (org-mode-print-row data))
           ((string=? style "confluence-markdown")
-           (displayln "|" (string-join row "|") "|"))
+           (displayln "|" (string-join data "|") "|"))
           (else
            (displayln "Unknown format! " style)))))
 
