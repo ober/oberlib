@@ -244,7 +244,7 @@
               ix-prs))
           (reverse ix-prs))))))
 
-(def (style-output infos style)
+(def (style-output infos (style "org-mode"))
   (when (list? infos)
     (let* ((sizes (hash))
            (data (reverse infos))
