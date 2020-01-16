@@ -424,11 +424,6 @@
          (safe-word (write-uri-encoded str uri-encoding)))
     safe-word))
 
-(def (load-config)
-  " do nothing "
-  (displayln "load-config"))
-
-
 (def (markdown-to-confluence in out)
   (def from (call-with-input-file in read-all-as-lines))
   (def to (open-output-file [path: out append: #f]))
