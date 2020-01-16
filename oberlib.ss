@@ -506,7 +506,7 @@
                       in-quote-block?
                       (= 0 pos))
                 (set! in-quote-block? #f)
-                (map (cut write-char <> output) (string->list "{/quote}"))))
+                (map (cut write-char <> output) (string->list "{quote}"))))
             (close-output-port output)
             (write-string (string-append (get-output-string output) (string #\newline)) to))
            (else
@@ -515,4 +515,6 @@
            (close-input-port port)))
 
     (when in-quote-block?
-      (write-string "{//quote}" to))))
+      (write-string "{quote}" to)))
+  (force-output to)
+  (close-output-port to))
