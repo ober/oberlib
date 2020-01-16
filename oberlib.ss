@@ -162,7 +162,6 @@
   (dp (print-curl "post" uri headers data))
   (try
    (let* ((reply (http-post uri
-                            redirect: #t
                             headers: headers
                             data: data))
           (status (request-status reply))
