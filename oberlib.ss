@@ -158,10 +158,11 @@
       text
       (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
-(def (do-post uri headers data handlers)
+(def (do-post uri headers data)
   (dp (print-curl "post" uri headers data))
   (try
    (let* ((reply (http-post uri
+                            redirect: #t
                             headers: headers
                             data: data))
           (status (request-status reply))
