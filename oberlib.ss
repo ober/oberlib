@@ -431,6 +431,7 @@
 
 (def (markdown-to-confluence in out)
   (def from (call-with-input-file in read-all-as-lines))
+  (def to (open-output-file [path: out append: #f]))
 
   (def (write-line in out)
     (let loop ((c (read-char in)))
@@ -507,10 +508,11 @@
                 (set! in-quote-block? #f)
                 (map (cut write-char <> output) (string->list "{/quote}"))))
             (close-output-port output)
-            (displayln (get-output-string output)))
+            (write-string (string-append (get-output-string output) (string #\newline)) to))
            (else
             (write-char p output)
             (loop (read-char port)))))
-        (close-input-port port)))
+           (close-input-port port)))
+
     (when in-quote-block?
-      (displayln "{//quote}"))))
+      (write-string "{//quote}" to))))
