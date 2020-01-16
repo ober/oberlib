@@ -35,7 +35,7 @@
   :std/text/zlib
   :std/xml/ssax)
 
-(export #t)
+(export (except-out #t load-config))
 
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
@@ -242,6 +242,10 @@
               (lp pos)
               ix-prs))
           (reverse ix-prs))))))
+
+(def (load-config)
+  "dummy load-config"
+  )
 
 (def (style-output infos)
   (let-hash (load-config)
