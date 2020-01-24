@@ -421,3 +421,10 @@
   (let* ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
          (safe-word (write-uri-encoded str uri-encoding)))
     safe-word))
+
+(def (get-if-set-b64 var alt)
+  "Return the value of an env var if it is set, decoded from b64, else return alt"
+  (let ((val (getenv var #f)))
+    (if val
+      (bytes->string (base64-decode val))
+      alt)))
