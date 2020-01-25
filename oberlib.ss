@@ -469,3 +469,10 @@
 
 (def (present-item item)
   "Given a random object, print it out to the stdout"
+  (cond
+   ((table? item)
+    (displayln (hash->string item)))
+   ((or (string? item) (list? item))
+    (displayln item))
+   (else
+    (displayln "present-item: unknown:" item))))
