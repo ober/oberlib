@@ -175,7 +175,12 @@
      (let ((status (request-status reply))
            (text (request-text reply)))
        (if (success? status)
-         [ #t (from-json text) ]
+         (begin
+           (let (body (from-json text))
+             (when (and (list? body)
+                        (= (length body) 1))
+               (set! body (nth 0 body))))
+           [ #t body])
          [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
        (catch (e)
          (display-exception e))))
