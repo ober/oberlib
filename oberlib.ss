@@ -108,7 +108,7 @@
 
 (def (do-delete uri headers)
   (let* ((reply (http-delete uri
-                             headers: headers))l
+                             headers: headers))
          (status (request-status reply))
          (text (request-text reply)))
     (print-curl "delete" uri "" "")
@@ -158,7 +158,7 @@
       text
       (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
-(def (rest-call type uri headers (or data #f))
+(def (rest-call type uri headers (data #f))
   "Wrapper for all http queries that should return json on success.
    We return a list of OK?: #t/#f and results: object"
   (try
@@ -176,9 +176,9 @@
            (text (request-text reply)))
        (if (success? status)
          [ #t (from-json text) ]
-         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])
+         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
        (catch (e)
-         (display-exception e))))))
+         (display-exception e))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
@@ -187,7 +187,7 @@
   (http-post uri headers: headers data: data))
 
 (def (rest-call-put uri headers data)
-   (http-put uri headers: headers data: data))
+  (http-put uri headers: headers data: data))
 
 (def (rest-call-delete uri headers)
   (http-delete uri headers: headers))
@@ -195,72 +195,69 @@
 (def (do-post uri headers data)
   (dp (print-curl "post" uri headers data))
   (try
-   (let* ((reply (http-post uri
-                            headers: headers
-                            data: data)))
+   (let* ((reply (http-post uri headers: headers data: data))
           (status (request-status reply))
           (text (request-text reply)))
-
      (if (success? status)
        text
        (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
-   (catch (e)
-     (display-exception e))))
+     (catch (e)
+       (display-exception e))))
 
 (def (do-get uri)
-  (print-curl "get" uri "" "")
-  (let* ((reply (http-get uri))
-         (status (request-status reply))
-         (text (request-text reply)))
-    (if (success? status)
-      text
-      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+(print-curl "get" uri "" "")
+(let* ((reply (http-get uri))
+       (status (request-status reply))
+       (text (request-text reply)))
+  (if (success? status)
+    text
+    (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
 (def (do-post-generic uri headers data)
-  (let* ((reply (http-post uri
-                           headers: headers
-                           data: data))
-         (status (request-status reply))
-         (text (request-text reply)))
-    (dp (print-curl "post" uri headers data))
-    (if (success? status)
-      text
-      (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
+(let* ((reply (http-post uri
+                         headers: headers
+                         data: data))
+       (status (request-status reply))
+       (text (request-text reply)))
+  (dp (print-curl "post" uri headers data))
+  (if (success? status)
+    text
+    (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
 
 (def (do-put uri headers data)
-  (dp (print-curl "put" uri headers data))
-  (let* ((reply (http-put uri
-                          headers: headers
-                          data: data)))
-    reply))
+(dp (print-curl "put" uri headers data))
+(let* ((reply (http-put uri
+                        headers: headers
+                        data: data)))
+  reply))
 
 (def (remove-bad-matches vars omit)
-  (let ((goodies []))
-    (for (var vars)
-      (unless (string-contains var omit)
-        (set! goodies (flatten (cons var goodies)))))
-    (reverse goodies)))
+(let ((goodies []))
+  (for (var vars)
+    (unless (string-contains var omit)
+      (set! goodies (flatten (cons var goodies)))))
+  (reverse goodies)))
 
 (def (interpol str)
-  (displayln (interpol-from-env str)))
+(displayln (interpol-from-env str)))
 
 (def (interpol-from-env str)
-  (if (not (string? str))
-    str
-    (let* ((ruby (pregexp "#\\{([a-zA-Z0-9_-]*)\\}"))
-           (vars (remove-bad-matches (match-regexp ruby str) "#"))
-           (newstr (pregexp-replace* ruby str "~a"))
-           (set-vars []))
+(if (not (string? str))
+  str
+  (let* ((ruby (pregexp "#\\{([a-zA-Z0-9_-]*)\\}"))
+         (vars (remove-bad-matches (match-regexp ruby str) "#"))
+         (newstr (pregexp-replace* ruby str "~a"))
+         (set-vars []))
 
-      (for (var vars)
-        (let ((val (getenv var #f)))
-          (if (not val)
-            (begin
-              (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
-              (exit 2))
-            (set! set-vars (cons val set-vars)))))
-      (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
-      (apply format newstr set-vars))))
+    (for (var vars)
+      (let ((val (getenv var #f)))
+        (if (not val)
+          (begin
+            (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
+            (exit 2))
+          (set! set-vars (cons val set-vars)))))
+    (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+    (apply format newstr set-vars))))
 
 (def (match-regexp pat str . opt-args)
   "Like pregexp-match but for all matches til end of str"
