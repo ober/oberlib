@@ -198,8 +198,8 @@
    (let* ((reply (http-post uri
                             headers: headers
                             data: data)))
-;;          (status (request-status reply))
-;;          (text (request-text reply)))
+          (status (request-status reply))
+          (text (request-text reply)))
 
      (if (success? status)
        text
