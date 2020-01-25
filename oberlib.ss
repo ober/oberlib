@@ -172,11 +172,13 @@
             (rest-call-put uri headers data))
            ((string=? type "delete")
             (rest-call-delete uri headers)))))
-     (if (success? (request-status reply))
-       [ #t (from-json (request-text reply)) ]
-       [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])
-     (catch (e)
-       (display-exception e)))))
+     (let ((status (request-status reply))
+           (text (request-text reply)))
+       (if (success? status)
+         [ #t (from-json text) ]
+         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])
+       (catch (e)
+         (display-exception e))))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
