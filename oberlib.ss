@@ -164,13 +164,13 @@
   (try
    (let ((reply
           (cond
-           ((string=? type "get")
+           ((equal? type 'get)
             (rest-call-get uri headers))
-           ((string=? type "post")
+           ((equal? type 'post)
             (rest-call-post uri headers data))
-           ((string=? type "put")
+           ((equal? type 'put)
             (rest-call-put uri headers data))
-           ((string=? type "delete")
+           ((equal? type 'delete)
             (rest-call-delete uri headers)))))
      (let ((status (request-status reply))
            (text (request-text reply)))
