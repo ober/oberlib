@@ -459,3 +459,10 @@
     (if val
       (bytes->string (base64-decode val))
       alt)))
+
+(def (default-headers basic)
+  [
+   ["Accept" :: "*/*"]
+   ["Content-type" :: "application/json"]
+   ["Authorization" :: basic ]
+   ])
