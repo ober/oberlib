@@ -108,7 +108,7 @@
 
 (def (do-delete uri headers)
   (let* ((reply (http-delete uri
-                             headers: headers))
+                             headers: headers))l
          (status (request-status reply))
          (text (request-text reply)))
     (print-curl "delete" uri "" "")
@@ -158,14 +158,46 @@
       text
       (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
+(def (rest-call type uri headers (or data #f))
+  "Wrapper for all http queries that should return json on success.
+   We return a list of OK?: #t/#f and results: object"
+  (try
+   (let ((reply
+          (cond
+           ((string=? type "get")
+            (rest-call-get uri headers))
+           ((string=? type "post")
+            (rest-call-post uri headers data))
+           ((string=? type "put")
+            (rest-call-put uri headers data))
+           ((string=? type "delete")
+            (rest-call-delete uri headers)))))
+     (if (success? (request-status reply))
+       [ #t (from-json (request-text reply)) ]
+       [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])
+     (catch (e)
+       (display-exception e)))))
+
+(def (rest-call-get uri headers)
+  (http-get uri headers: headers))
+
+(def (rest-call-post uri headers data)
+  (http-post uri headers: headers data: data))
+
+(def (rest-call-put uri headers data)
+   (http-put uri headers: headers data: data))
+
+(def (rest-call-delete uri headers)
+  (http-delete uri headers: headers))
+
 (def (do-post uri headers data)
   (dp (print-curl "post" uri headers data))
   (try
    (let* ((reply (http-post uri
                             headers: headers
-                            data: data))
-          (status (request-status reply))
-          (text (request-text reply)))
+                            data: data)))
+;;          (status (request-status reply))
+;;          (text (request-text reply)))
 
      (if (success? status)
        text
