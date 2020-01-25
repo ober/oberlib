@@ -116,7 +116,7 @@
       text
       (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
-(def (stringify-hash h)
+(def (hash->string h)
   (let ((results []))
     (if (table? h)
       (begin
@@ -127,7 +127,7 @@
         (append-strings results))
       "N/A")))
 
-(defalias hash->str stringify-hash)
+(defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
   ;;(displayln headers)
@@ -466,3 +466,6 @@
    ["Content-type" :: "application/json"]
    ["Authorization" :: basic ]
    ])
+
+(def (present-item item)
+  "Given a random object, print it out to the stdout"
