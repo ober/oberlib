@@ -11,9 +11,9 @@
              ["charlie" 8174]
              ["xray" "umbra"]])
 
-(def (test-lmdb)
+(def (test-lmdb dir)
   (displayln "<--- Lmdb")
-  (lmdb-db-open "/tmp/meowmix")
+  (lmdb-db-open dir)
   (for (datum datums)
     (with ([ key value ] datum)
       (lmdb-db-put key value)))
@@ -25,9 +25,9 @@
           (display "FAIL: "))
         (displayln (format "Key: ~a Value: ~a:~a Fetched value: ~a" key (type-of value) value fetched-value))))))
 
-(def (test-leveldb)
+(def (test-leveldb dir)
   (displayln "<---- LevelDB")
-  (leveldb-db-open "/tmp/meoxmix2")
+  (leveldb-db-open dir)
   (for (datum datums)
     (with ([ key value ] datum)
       (leveldb-db-put key value)))
@@ -51,13 +51,22 @@
       (display "FAIL: "))
     (displayln (format "Update: value: ~a" fetched-value))))
 
-(def (test-db-generics)
-  (let ((dir "/tmp/genericsdb-test2/"))
-    ;;    (create-directory* dir)
-    (with ([ env db ] (db-open lmdb: dir))
-      (db-put "omg" "itworks"))))
+(def (test-db-generics type dir)
+  (let ((key "omg")
+        (val "it works"))
+    (db-open type dir)
+    (db-put key val)
+    (let ((fetched-value (db-get key)))
+      (if (equal? val fetched-value)
+        (display "OK: ")
+        (display "FAIL: "))
+      (displayln type ": key: " key " val: " val " fetched: " fetched-value))))
+
+
 
 ;; Run 'em!
-;;(test-db-generics)
-(test-lmdb)
-(test-leveldb)
+(test-lmdb "/tmp/lmdb")
+(test-leveldb "/tmp/leveldb")
+(displayln "<---- Db generic")
+(test-db-generics 'lmdb "/tmp/generics.lmdb")
+(test-db-generics 'leveldb "/tmp/generics.leveldb")
