@@ -514,39 +514,43 @@
 
 (def (db-put key value)
   (cond
-   ((equal? :db-type leveldb:)
+   ((equal? :db-type 'leveldb)
     (leveldb-db-put key value))
-   ((equal? :db-type lmdb:)
+   ((equal? :db-type 'lmdb)
     (lmdb-db-put key value))
+   ((void? :db-type)
+    (displayln ":db-type is void. Failed to initialize db?"))
    (else
     (displayln "Unknown DB type " :db-type))))
 
 (def (db-get key)
   (cond
-   ((equal? :db-type leveldb:)
+   ((equal? :db-type 'leveldb)
     (leveldb-db-get key))
-   ((equal? :db-type lmdb:)
+   ((equal? :db-type 'lmdb)
     (lmdb-db-get key))
    (else
     (displayln "Unknown DB type " :db-type))))
 
 (def (db-open type dir)
   (cond
-   ((equal? type leveldb:)
+   ((equal? type 'leveldb)
+    (set! :db-type 'leveldb)
     (leveldb-db-open dir))
-   ((equal? type lmdb:)
+   ((equal? type 'lmdb)
+    (set! :db-type 'lmdb)
     (lmdb-db-open dir))
    (else
     (displayln "Unknown :db-type: " type)
     (exit 2))))
 
-(def db-dir (or (getenv "oberlibdb" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
+;;(def db-dir (or (getenv "oberlibdb" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
 
 (def (db-close)
   (cond
-   ((equal? :db-type lmdb:)
+   ((equal? :db-type 'lmdb)
     (lmdb-db-close))
-   ((equal? :db-type leveldb:)
+   ((equal? :db-type 'leveldb)
     (leveldb-db-close))
    (else
     (displayln "Unknown :db-type: " :db-type)
@@ -554,7 +558,7 @@
 
 (def (db-key? key)
   (cond
-   ((equal? :db-type lmdb:)
+   ((equal? :db-type 'lmdb)
     (or (lmdb-db-get key) #f))
    (else
     (displayln "Unknown :db-type: " :db-type)
@@ -562,9 +566,9 @@
 
 (def (db-batch batch key value)
   (cond
-   ((equal? :db-type lmdb:)
+   ((equal? :db-type 'lmdb)
     (lmdb-db-put key value))
-   ((equal? :db-type leveldb:)
+   ((equal? :db-type 'leveldb)
     (leveldb-db-put key value))
    (else
     (displayln "Unknown :db-type: " :db-type)
