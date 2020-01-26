@@ -44,8 +44,8 @@
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
-(def env lmdb:)
-(def db #f)
+;;(def env lmdb:)
+;;(def db #f)
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
@@ -512,133 +512,133 @@
 ;; misc db routines
 
 ;;;; DB OPERATIONS
-(def (db-call operation type key value)
-  (cond
-   ((equal? operation put:)
-    (db-put type key value))
-   ((equal? operation get:)
-    (db-get type key))
-   (else
-    (displayln "Unknown operation " operation))))
+;; (def (db-call operation type key value)
+;;   (cond
+;;    ((equal? operation put:)
+;;     (db-put type key value))
+;;    ((equal? operation get:)
+;;     (db-get type key))
+;;    (else
+;;     (displayln "Unknown operation " operation))))
 
-(def (db-put type key value)
-  (cond
-   ((equal? type leveldb:)
-    (db-put-leveldb key value))
-   ((equal? type lmdb:)
-    (db-put-lmdb key value))
-   (else
-    (displayln "Unknown DB type " type))))
+;; (def (db-put type key value)
+;;   (cond
+;;    ((equal? type leveldb:)
+;;     (db-put-leveldb key value))
+;;    ((equal? type lmdb:)
+;;     (db-put-lmdb key value))
+;;    (else
+;;     (displayln "Unknown DB type " type))))
 
-(def (db-get type key)
-  (cond
-   ((equal? type leveldb:)
-    (db-get-leveldb key))
-   ((equal? type lmdb:)
-    (db-get-lmdb key))
-   (else
-    (displayln "Unknown DB type " type))))
+;; (def (db-get type key)
+;;   (cond
+;;    ((equal? type leveldb:)
+;;     (db-get-leveldb key))
+;;    ((equal? type lmdb:)
+;;     (db-get-lmdb key))
+;;    (else
+;;     (displayln "Unknown DB type " type))))
 
-(def (db-open type)
-  (dp "in db-open")
-  (cond
-   ((equal? db-type leveldb:)
-    (displayln "can't open leveldb yet"))
-    ;;(leveldb-open-db env "kunabi-store"))
-   ((equal? db-type lmdb:)
-    (lmdb-open-db env "kunabi-store"))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-open type)
+;;   (dp "in db-open")
+;;   (cond
+;;    ((equal? db-type leveldb:)
+;;     (displayln "can't open leveldb yet"))
+;;     ;;(leveldb-open-db env "kunabi-store"))
+;;    ((equal? db-type lmdb:)
+;;     (lmdb-open-db env "kunabi-store"))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
-(def (db-init)
-  (dp "in db-init")
-  (cond
-   ((equal? db-type lmdb:)
-    (displayln "db-init lmdb noop"))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-init)
+;;   (dp "in db-init")
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (displayln "db-init lmdb noop"))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
-(def db-dir (or (getenv "KUNABI" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
+;; (def db-dir (or (getenv "KUNABI" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
 
-(def db-type lmdb:)
+;; (def db-type lmdb:)
 
-(def (db-write db wb)
-  (dp "in db-write")
-  (cond
-   ((equal? db-type lmdb:)
-    (displayln "db-write wb lmdb: noop"))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-write db wb)
+;;   (dp "in db-write")
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (displayln "db-write wb lmdb: noop"))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
-(def (db-close db)
-  (dp "in db-close")
-  (cond
-   ((equal? db-type lmdb:)
-    (displayln "db-close lmdb:"))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-close db)
+;;   (dp "in db-close")
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (displayln "db-close lmdb:"))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
-(def (db-key? db2 key)
-  (dp (format "in db-key? db2: ~a key: ~a" db2 key))
-  (cond
-   ((equal? db-type lmdb:)
-    (or (db-get-lmdb key) #f))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-key? db2 key)
+;;   (dp (format "in db-key? db2: ~a key: ~a" db2 key))
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (or (db-get-lmdb key) #f))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
 
-(def (db-batch batch key value)
-  (cond
-   ((equal? db-type lmdb:)
-    (db-put-lmdb key value))
-   (else
-    (displayln "Unknown db-type: " db-type)
-    (exit 2))))
+;; (def (db-batch batch key value)
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (db-put-lmdb key value))
+;;    (else
+;;     (displayln "Unknown db-type: " db-type)
+;;     (exit 2))))
 
-(def (get key)
-  (dp (format  "get: ~a" key))
-  (cond
-   ((equal? db-type lmdb:)
-    (db-get-lmdb key))
-   ((equal? db-type leveldb:)
-    (displayln "stub for get in get for leveldb: " key))))
+;; (def (get key)
+;;   (dp (format  "get: ~a" key))
+;;   (cond
+;;    ((equal? db-type lmdb:)
+;;     (db-get-lmdb key))
+;;    ((equal? db-type leveldb:)
+;;     (displayln "stub for get in get for leveldb: " key))))
 
 ;; leveldb helpers
-(def (leveldb-db-get key)
-  (displayln "get-leveldb: " key)
-  (try
-   (let* ((bytes (leveldb-get db (format "~a" key)))
-	  (val (if (u8vector? bytes)
-		 (u8vector->object bytes)
-		 #f)))
-     val)
-   (catch (e)
-     (raise e))))
+;; (def (leveldb-db-get key)
+;;   (displayln "get-leveldb: " key)
+;;   (try
+;;    (let* ((bytes (leveldb-get db (format "~a" key)))
+;; 	  (val (if (u8vector? bytes)
+;; 		 (u8vector->object bytes)
+;; 		 #f)))
+;;      val)
+;;    (catch (e)
+;;      (raise e))))
 
-(def (level-db-put key val)
-  (displayln "put-leveldb: " key " " val)
-  (try
-   (leveldb-put db key (object->u8vector val))
-   (catch (e)
-     (raise e))))
+;; (def (leveldb-db-put env db key val)
+;;   (displayln "put-leveldb: " key " " val)
+;;   (try
+;;    (leveldb-put db key (object->u8vector val))
+;;    (catch (e)
+;;      (raise e))))
 
-(def (leveldb-db-update key val)
-  (leveldb-db-put key val))
+;; (def (leveldb-db-update key val)
+;;   (leveldb-db-put key val))
 
-(def (leveldb-db-remove key)
-  (displayln "noop"))
+;; (def (leveldb-db-remove key)
+;;   (displayln "noop"))
 
 ;; lmdb specifics
 (def (lmdb-make-env dir)
   "lmdb needs an env to be passed for lmdb-open-db"
   (lmdb-open dir))
 
-(def (lmdb-db-update key val)
+(def (lmdb-db-update env db key val)
   (let* ((txn (lmdb-txn-begin env))
 	 (bytes (lmdb-get txn db key))
 	 (current (if bytes
@@ -656,7 +656,7 @@
        (lmdb-txn-abort txn)
        (raise e)))))
 
-(def (lmdb-db-get key)
+(def (lmdb-db-get env db key)
   (let (txn (lmdb-txn-begin env))
     (try
      (let* ((bytes (lmdb-get txn db key))
@@ -672,7 +672,7 @@
        ;;(raise e)
        ))))
 
-(def (lmdb-db-put key val)
+(def (lmdb-db-put env db key val)
   (let* ((bytes (call-with-output-u8vector [] (cut write-json val <>)))
 	 (bytes (compress bytes))
 	 (txn (lmdb-txn-begin env)))
