@@ -591,7 +591,6 @@
 ;;     (displayln "Unknown db-type: " db-type)
 ;;     (exit 2))))
 
-
 ;; (def (db-batch batch key value)
 ;;   (cond
 ;;    ((equal? db-type lmdb:)
@@ -609,31 +608,42 @@
 ;;     (displayln "stub for get in get for leveldb: " key))))
 
 ;; leveldb helpers
-;; (def (leveldb-db-get key)
-;;   (displayln "get-leveldb: " key)
-;;   (try
-;;    (let* ((bytes (leveldb-get db (format "~a" key)))
-;; 	  (val (if (u8vector? bytes)
-;; 		 (u8vector->object bytes)
-;; 		 #f)))
-;;      val)
-;;    (catch (e)
-;;      (raise e))))
+(def (leveldb-db-open dir)
+  (leveldb-open dir))
 
-;; (def (leveldb-db-put env db key val)
-;;   (displayln "put-leveldb: " key " " val)
-;;   (try
-;;    (leveldb-put db key (object->u8vector val))
-;;    (catch (e)
-;;      (raise e))))
+(def (leveldb-db-get env db key)
+  (try
+   (let* ((bytes (leveldb-get db (format "~a" key)))
+	  (val (if (u8vector? bytes)
+		 (u8vector->object bytes)
+		 #f)))
+     val)
+   (catch (e)
+     (raise e))))
 
-;; (def (leveldb-db-update key val)
-;;   (leveldb-db-put key val))
+(def (leveldb-db-put env db key val)
+  (try
+   (leveldb-put db key (object->u8vector val))
+   (catch (e)
+     (raise e))))
 
-;; (def (leveldb-db-remove key)
-;;   (displayln "noop"))
+(def (leveldb-db-update env db key val)
+  (try
+   (leveldb-db-put env db key val)
+   (catch (e)
+     (raise e))))
+
+(def (leveldb-db-remove env db key)
+  (try
+   (leveldb-delete db key)
+   (catch (e)
+     (raise e))))
 
 ;; lmdb specifics
+(def (lmdb-db-open env name)
+  "Return a db handle to env and name"
+  (lmdb-open-db env name))
+
 (def (lmdb-make-env dir)
   "lmdb needs an env to be passed for lmdb-open-db"
   (lmdb-open dir))
