@@ -523,6 +523,8 @@
    (else
     (displayln "Unknown DB type " :db-type))))
 
+(defalias db-update db-put)
+
 (def (db-get key)
   (cond
    ((equal? :db-type 'leveldb)
