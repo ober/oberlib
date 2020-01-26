@@ -175,12 +175,7 @@
      (let ((status (request-status reply))
            (text (request-text reply)))
        (if (success? status)
-         (begin
-           (let (body (from-json text))
-             (when (and (list? body)
-                        (= (length body) 1))
-               (set! body (nth 0 body)))
-           [ #t body]))
+         [ #t (from-json text) ]
          [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
        (catch (e)
          (display-exception e))))
@@ -481,3 +476,28 @@
     (displayln item))
    (else
     (displayln "present-item: unknown:" item))))
+
+
+(def (find-files path
+		 (pred? true)
+		 recurse?: (recurse? true)
+		 follow-symlinks?: (follow-symlinks? #f))
+  (with-list-builder (collect!)
+		     (walk-filesystem-tree! path
+					    (λ (file) (when (pred? file) (collect! file)))
+					    recurse?: recurse?
+					    follow-symlinks?: follow-symlinks?)))
+
+(def (walk-filesystem-tree!
+      path
+      visit
+      recurse?: (recurse? true)
+      follow-symlinks?: (follow-symlinks? #f))
+  (visit path)
+  (when (and (ignore-errors (path-is-directory? path follow-symlinks?))
+	     (recurse? path))
+    (for-each!
+     (directory-files path)
+     (λ (name) (walk-filesystem-tree!
+		(path-expand name path) visit
+		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
