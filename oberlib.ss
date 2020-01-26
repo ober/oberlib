@@ -583,6 +583,16 @@
     (displayln "Unknown :db-type: " :db-type)
     (exit 2))))
 
+(def (db-delete key)
+  (cond
+   ((equal? :db-type 'lmdb)
+    (lmdb-db-delete key))
+   ((equal? :db-type 'leveldb)
+    (leveldb-db-delete key))
+   (else
+    (displayln "Unknown :db-type: " :db-type)
+    (exit 2))))
+
 ;; leveldb helpers
 (def (leveldb-db-open dir)
   (set! :db-db (leveldb-open dir)))
@@ -612,7 +622,7 @@
    (catch (e)
      (raise e))))
 
-(def (leveldb-db-remove key)
+(def (leveldb-db-delete key)
   (try
    (leveldb-delete :db-db key)
    (catch (e)
@@ -673,9 +683,14 @@
        (lmdb-txn-abort txn)
        (raise e)))))
 
+(def (lmdb-db-delete key)
+  (let ((txn (lmdb-txn-begin :db-env)))
+    (lmdb-del txn :db-db key)))
+
 (def (lmdb-db-close)
   "noop"
   (display "noop"))
+
 
 ;;(def records (db-open :db-type))
 
