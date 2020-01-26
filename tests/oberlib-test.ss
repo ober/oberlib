@@ -6,13 +6,15 @@
         :std/generic
         "~/src/oberlib/oberlib.ss")
 
+(def datums [["alpha" secret:]
+             ["romeo" 'top]
+             ["charlie" 8174]
+             ["xray" "umbra"]])
+
+
 (def (test-lmdb)
-  (let* ((datums [["alpha" secret:]
-                 ["romeo" 'top]
-                 ["charlie" 8174]
-                 ["xray" "umbra"]])
-        (env (lmdb-make-env "/tmp/test-lmdb"))
-        (db (lmdb-open-db env "tests")))
+  (let* ((env (lmdb-make-env "/tmp/test-lmdb"))
+        (db (lmdb-db-open env "tests")))
     (for (datum datums)
       (with ([ key value ] datum)
         (lmdb-db-put env db key value)))
@@ -24,5 +26,19 @@
             (display "FAIL: "))
           (displayln (format "Key: ~a Value: ~a:~a Fetched value: ~a" key (type-of value) value fetched-value)))))))
 
+(def (test-leveldb)
+  (let* ((env #f)
+         (db (leveldb-db-open (format "/tmp/test.db.~a" (random-integer (expt 2 32))))))
+    (for (datum datums)
+      (with ([ key value ] datum)
+        (leveldb-db-put env db key value)))
+    (for (datum datums)
+      (with ([ key value ] datum)
+        (let ((fetched-value (leveldb-db-get env db key)))
+          (if (equal? value fetched-value)
+            (display "OK: ")
+            (display "FAIL: "))
+          (displayln (format "Key: ~a Value: ~a:~a Fetched value: ~a" key (type-of value) value fetched-value)))))))
 
 (test-lmdb)
+(test-leveldb)
