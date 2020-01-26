@@ -608,20 +608,8 @@
    ((equal? db-type leveldb:)
     (displayln "stub for get in get for leveldb: " key))))
 
-
-
-
-
-
-
 ;; leveldb helpers
-(def (db-get-leveldb key)
-  (displayln "noop"))
-
-(def (db-put-leveldb key val)
-  (displayln "noop"))
-
-(def (get-leveldb key)
+(def (leveldb-db-get key)
   (displayln "get-leveldb: " key)
   (try
    (let* ((bytes (leveldb-get db (format "~a" key)))
@@ -632,21 +620,25 @@
    (catch (e)
      (raise e))))
 
-(def (put-leveldb key val)
+(def (level-db-put key val)
   (displayln "put-leveldb: " key " " val)
   (try
    (leveldb-put db key (object->u8vector val))
    (catch (e)
      (raise e))))
 
-(def (update-leveldb key val)
-  (put-leveldb key val))
+(def (leveldb-db-update key val)
+  (leveldb-db-put key val))
 
-(def (remove-leveldb key)
-  (dp (format "remove-leveldb: ~a" key)))
+(def (leveldb-db-remove key)
+  (displayln "noop"))
 
 ;; lmdb specifics
-(def (update-lmdb key val)
+(def (lmdb-make-env dir)
+  "lmdb needs an env to be passed for lmdb-open-db"
+  (lmdb-open dir))
+
+(def (lmdb-db-update key val)
   (let* ((txn (lmdb-txn-begin env))
 	 (bytes (lmdb-get txn db key))
 	 (current (if bytes
@@ -664,7 +656,7 @@
        (lmdb-txn-abort txn)
        (raise e)))))
 
-(def (db-get-lmdb key)
+(def (lmdb-db-get key)
   (let (txn (lmdb-txn-begin env))
     (try
      (let* ((bytes (lmdb-get txn db key))
@@ -680,7 +672,7 @@
        ;;(raise e)
        ))))
 
-(def (db-put-lmdb key val)
+(def (lmdb-db-put key val)
   (let* ((bytes (call-with-output-u8vector [] (cut write-json val <>)))
 	 (bytes (compress bytes))
 	 (txn (lmdb-txn-begin env)))
@@ -691,12 +683,9 @@
        (lmdb-txn-abort txn)
        (raise e)))))
 
-
-
 ;;(def records (db-open db-type))
 
 ;;(def env records)
-
 
 (defalias λ lambda)
 
