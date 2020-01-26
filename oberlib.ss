@@ -526,9 +526,9 @@
 (def (db-update key val)
   (cond
    ((equal? :db-type 'leveldb)
-    (leveldb-db-update key val))
+    (leveldb-db-put key val))
    ((equal? :db-type 'lmdb)
-    (lmdb-db-update key val))
+    (lmdb-db-put key val))
    (else
     (displayln "Unknown DB type " :db-type))))
 

@@ -53,16 +53,23 @@
 
 (def (test-db-generics type dir)
   (let ((key "omg")
-        (val "it works"))
+        (val "it works")
+        (new-value "this is a new value"))
     (db-open type dir)
+    ;; put/get
     (db-put key val)
     (let ((fetched-value (db-get key)))
       (if (equal? val fetched-value)
         (display "OK: ")
         (display "FAIL: "))
-      (displayln type ": key: " key " val: " val " fetched: " fetched-value))))
-
-
+      (displayln type ": key: " key " val: " val " fetched: " fetched-value))
+    ;; update
+    (db-update key new-value)
+    (let ((fetched-value (db-get key)))
+      (if (equal? new-value fetched-value)
+        (display "OK: ")
+        (display "FAIL: "))
+      (displayln type ": key: " key " new-value: " new-value " fetched: " fetched-value))))
 
 ;; Run 'em!
 (test-lmdb "/tmp/lmdb")
