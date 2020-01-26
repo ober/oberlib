@@ -9,6 +9,10 @@
   :std/crypto/etc
   :std/crypto/libcrypto
   :std/db/dbi
+  :std/db/postgresql
+  :std/db/postgresql-driver
+  :std/db/lmdb
+  :std/db/leveldb
   :scheme/base
   :std/debug/heap
   :std/iter
@@ -40,6 +44,8 @@
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
+(def env lmdb:)
+(def db #f)
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
@@ -501,3 +507,112 @@
      (λ (name) (walk-filesystem-tree!
 		(path-expand name path) visit
 		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
+
+
+;; leveldb helpers
+(def (get-leveldb key)
+  (displayln "get-leveldb: " key)
+  (try
+   (let* ((bytes (leveldb-get db (format "~a" key)))
+	  (val (if (u8vector? bytes)
+		 (u8vector->object bytes)
+		 #f)))
+     val)
+   (catch (e)
+     (raise e))))
+
+(def (put-leveldb key val)
+  (displayln "put-leveldb: " key " " val)
+  (try
+   (leveldb-put db key (object->u8vector val))
+   (catch (e)
+     (raise e))))
+
+(def (update-leveldb key val)
+  (put-leveldb key val))
+
+(def (remove-leveldb key)
+  (dp (format "remove-leveldb: ~a" key)))
+
+(def (db-get-leveldb key)
+  (displayln "place holder"))
+
+(def (update-lmdb key val)
+  (let* ((txn (lmdb-txn-begin env))
+	 (bytes (lmdb-get txn db key))
+	 (current (if bytes
+		    (call-with-input-u8vector (uncompress bytes) read-json)
+		    #f))
+	 (new (if (table? current)
+		(hash-put! current val #t)))
+	 (final (compress (call-with-output-u8vector [] (cut write-json new <>)))))
+    ;;(bytes (call-with-output-u8vector [] (cut write-json val <>)))
+    ;; (bytes (compress bytes))
+    (try
+     (lmdb-put txn db key final)
+     (lmdb-txn-commit txn)
+     (catch (e)
+       (lmdb-txn-abort txn)
+       (raise e)))))
+
+(def (db-get-lmdb key)
+  (let (txn (lmdb-txn-begin env))
+    (try
+     (let* ((bytes (lmdb-get txn db key))
+	    (val (if bytes
+		   (call-with-input-u8vector (uncompress bytes) read-json)
+		   #f)))
+       (lmdb-txn-commit txn)
+       val)
+     (catch (e)
+       (lmdb-txn-abort txn)
+       (display e)
+       (displayln "error kunabi-store-get: key:" key)
+       ;;(raise e)
+       ))))
+
+(def (db-put-lmdb key val)
+  (let* ((bytes (call-with-output-u8vector [] (cut write-json val <>)))
+	 (bytes (compress bytes))
+	 (txn (lmdb-txn-begin env)))
+    (try
+     (lmdb-put txn db key bytes)
+     (lmdb-txn-commit txn)
+     (catch (e)
+       (lmdb-txn-abort txn)
+       (raise e)))))
+
+
+;;(def records (db-open db-type))
+
+;;(def env records)
+
+
+(defalias λ lambda)
+
+(defrules ignore-errors ()
+  ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
+
+(def (for-each! list fun)
+  (match list
+    ([elem . more] (fun elem) (for-each! more fun))
+    (_ (void))))
+
+(defrules with-list-builder ()
+  ((_ (c r) body1 body+ ...) (call-with-list-builder (λ (c r) body1 body+ ...)))
+  ((_ (c) body1 body+ ...) (with-list-builder (c _) body1 body+ ...)))
+
+(def (subpath top . sub-components)
+  (path-expand (string-join sub-components "/") top))
+
+(def (path-is-symlink? path)
+  (equal? 'symbolic-link (file-info-type (file-info path #f))))
+
+(def (path-is-not-symlink? path)
+  (not (path-is-symlink? path)))
+
+(def (path-is-file? path (follow-symlinks? #f))
+  (equal? 'regular (file-info-type (file-info path follow-symlinks?))))
+
+(def (path-is-directory? path (follow-symlinks? #f))
+  (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
