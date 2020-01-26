@@ -44,8 +44,7 @@
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
 (import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
-;;(def env lmdb:)
-;;(def db #f)
+
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
@@ -183,8 +182,8 @@
        (if (success? status)
          [ #t (from-json text) ]
          [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
-       (catch (e)
-         (display-exception e))))
+   (catch (e)
+     (display-exception e))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
@@ -207,63 +206,63 @@
      (if (success? status)
        text
        (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
-     (catch (e)
-       (display-exception e))))
+   (catch (e)
+     (display-exception e))))
 
 (def (do-get uri)
-(print-curl "get" uri "" "")
-(let* ((reply (http-get uri))
-       (status (request-status reply))
-       (text (request-text reply)))
-  (if (success? status)
-    text
-    (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+  (print-curl "get" uri "" "")
+  (let* ((reply (http-get uri))
+         (status (request-status reply))
+         (text (request-text reply)))
+    (if (success? status)
+      text
+      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
 (def (do-post-generic uri headers data)
-(let* ((reply (http-post uri
-                         headers: headers
-                         data: data))
-       (status (request-status reply))
-       (text (request-text reply)))
-  (dp (print-curl "post" uri headers data))
-  (if (success? status)
-    text
-    (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
+  (let* ((reply (http-post uri
+                           headers: headers
+                           data: data))
+         (status (request-status reply))
+         (text (request-text reply)))
+    (dp (print-curl "post" uri headers data))
+    (if (success? status)
+      text
+      (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
 
 (def (do-put uri headers data)
-(dp (print-curl "put" uri headers data))
-(let* ((reply (http-put uri
-                        headers: headers
-                        data: data)))
-  reply))
+  (dp (print-curl "put" uri headers data))
+  (let* ((reply (http-put uri
+                          headers: headers
+                          data: data)))
+    reply))
 
 (def (remove-bad-matches vars omit)
-(let ((goodies []))
-  (for (var vars)
-    (unless (string-contains var omit)
-      (set! goodies (flatten (cons var goodies)))))
-  (reverse goodies)))
+  (let ((goodies []))
+    (for (var vars)
+      (unless (string-contains var omit)
+        (set! goodies (flatten (cons var goodies)))))
+    (reverse goodies)))
 
 (def (interpol str)
-(displayln (interpol-from-env str)))
+  (displayln (interpol-from-env str)))
 
 (def (interpol-from-env str)
-(if (not (string? str))
-  str
-  (let* ((ruby (pregexp "#\\{([a-zA-Z0-9_-]*)\\}"))
-         (vars (remove-bad-matches (match-regexp ruby str) "#"))
-         (newstr (pregexp-replace* ruby str "~a"))
-         (set-vars []))
+  (if (not (string? str))
+    str
+    (let* ((ruby (pregexp "#\\{([a-zA-Z0-9_-]*)\\}"))
+           (vars (remove-bad-matches (match-regexp ruby str) "#"))
+           (newstr (pregexp-replace* ruby str "~a"))
+           (set-vars []))
 
-    (for (var vars)
-      (let ((val (getenv var #f)))
-        (if (not val)
-          (begin
-            (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
-            (exit 2))
-          (set! set-vars (cons val set-vars)))))
-    (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
-    (apply format newstr set-vars))))
+      (for (var vars)
+        (let ((val (getenv var #f)))
+          (if (not val)
+            (begin
+              (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
+              (exit 2))
+            (set! set-vars (cons val set-vars)))))
+      (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+      (apply format newstr set-vars))))
 
 (def (match-regexp pat str . opt-args)
   "Like pregexp-match but for all matches til end of str"
@@ -508,168 +507,137 @@
 		(path-expand name path) visit
 		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
 
-;; generic db functions
-;; misc db routines
-
 ;;;; DB OPERATIONS
-;; (def (db-call operation type key value)
-;;   (cond
-;;    ((equal? operation put:)
-;;     (db-put type key value))
-;;    ((equal? operation get:)
-;;     (db-get type key))
-;;    (else
-;;     (displayln "Unknown operation " operation))))
+(def :db-db #!void)
+(def :db-env #!void)
+(def :db-type #!void)
 
-;; (def (db-put type key value)
-;;   (cond
-;;    ((equal? type leveldb:)
-;;     (db-put-leveldb key value))
-;;    ((equal? type lmdb:)
-;;     (db-put-lmdb key value))
-;;    (else
-;;     (displayln "Unknown DB type " type))))
+(def (db-put key value)
+  (cond
+   ((equal? :db-type leveldb:)
+    (leveldb-db-put key value))
+   ((equal? :db-type lmdb:)
+    (lmdb-db-put key value))
+   (else
+    (displayln "Unknown DB type " :db-type))))
 
-;; (def (db-get type key)
-;;   (cond
-;;    ((equal? type leveldb:)
-;;     (db-get-leveldb key))
-;;    ((equal? type lmdb:)
-;;     (db-get-lmdb key))
-;;    (else
-;;     (displayln "Unknown DB type " type))))
+(def (db-get key)
+  (cond
+   ((equal? :db-type leveldb:)
+    (leveldb-db-get key))
+   ((equal? :db-type lmdb:)
+    (lmdb-db-get key))
+   (else
+    (displayln "Unknown DB type " :db-type))))
 
-;; (def (db-open type)
-;;   (dp "in db-open")
-;;   (cond
-;;    ((equal? db-type leveldb:)
-;;     (displayln "can't open leveldb yet"))
-;;     ;;(leveldb-open-db env "kunabi-store"))
-;;    ((equal? db-type lmdb:)
-;;     (lmdb-open-db env "kunabi-store"))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
+(def (db-open type dir)
+  (cond
+   ((equal? type leveldb:)
+    (leveldb-db-open dir))
+   ((equal? type lmdb:)
+    (lmdb-db-open dir))
+   (else
+    (displayln "Unknown :db-type: " type)
+    (exit 2))))
 
-;; (def (db-init)
-;;   (dp "in db-init")
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (displayln "db-init lmdb noop"))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
+(def db-dir (or (getenv "oberlibdb" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
 
-;; (def db-dir (or (getenv "KUNABI" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
+(def (db-close)
+  (cond
+   ((equal? :db-type lmdb:)
+    (lmdb-db-close))
+   ((equal? :db-type leveldb:)
+    (leveldb-db-close))
+   (else
+    (displayln "Unknown :db-type: " :db-type)
+    (exit 2))))
 
-;; (def db-type lmdb:)
+(def (db-key? key)
+  (cond
+   ((equal? :db-type lmdb:)
+    (or (lmdb-db-get key) #f))
+   (else
+    (displayln "Unknown :db-type: " :db-type)
+    (exit 2))))
 
-;; (def (db-write db wb)
-;;   (dp "in db-write")
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (displayln "db-write wb lmdb: noop"))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
-
-;; (def (db-close db)
-;;   (dp "in db-close")
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (displayln "db-close lmdb:"))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
-
-;; (def (db-key? db2 key)
-;;   (dp (format "in db-key? db2: ~a key: ~a" db2 key))
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (or (db-get-lmdb key) #f))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
-
-;; (def (db-batch batch key value)
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (db-put-lmdb key value))
-;;    (else
-;;     (displayln "Unknown db-type: " db-type)
-;;     (exit 2))))
-
-;; (def (get key)
-;;   (dp (format  "get: ~a" key))
-;;   (cond
-;;    ((equal? db-type lmdb:)
-;;     (db-get-lmdb key))
-;;    ((equal? db-type leveldb:)
-;;     (displayln "stub for get in get for leveldb: " key))))
+(def (db-batch batch key value)
+  (cond
+   ((equal? :db-type lmdb:)
+    (lmdb-db-put key value))
+   ((equal? :db-type leveldb:)
+    (leveldb-db-put key value))
+   (else
+    (displayln "Unknown :db-type: " :db-type)
+    (exit 2))))
 
 ;; leveldb helpers
 (def (leveldb-db-open dir)
-  (leveldb-open dir))
+  (set! :db-db (leveldb-open dir)))
 
-(def (leveldb-db-get env db key)
+(def (leveldb-db-close)
+  (leveldb-close :db-db))
+
+(def (leveldb-db-get key)
   (try
-   (let* ((bytes (leveldb-get db (format "~a" key)))
-	  (val (if (u8vector? bytes)
-		 (u8vector->object bytes)
-		 #f)))
+   (let* ((bytes (leveldb-get :db-db (format "~a" key)))
+          (val (if (u8vector? bytes)
+                 (u8vector->object bytes)
+                 #f)))
      val)
    (catch (e)
      (raise e))))
 
-(def (leveldb-db-put env db key val)
+(def (leveldb-db-put key val)
   (try
-   (leveldb-put db key (object->u8vector val))
+   (leveldb-put :db-db key (object->u8vector val))
    (catch (e)
      (raise e))))
 
-(def (leveldb-db-update env db key val)
+(def (leveldb-db-update key val)
   (try
-   (leveldb-db-put env db key val)
+   (leveldb-db-put key val)
    (catch (e)
      (raise e))))
 
-(def (leveldb-db-remove env db key)
+(def (leveldb-db-remove key)
   (try
-   (leveldb-delete db key)
+   (leveldb-delete :db-db key)
    (catch (e)
      (raise e))))
 
 ;; lmdb specifics
-(def (lmdb-db-open env name)
+
+(def (lmdb-db-open dir)
   "Return a db handle to env and name"
-  (lmdb-open-db env name))
+  (set! :db-env (lmdb-open dir))
+  (set! :db-db (lmdb-open-db :db-env "ober")))
 
 (def (lmdb-make-env dir)
   "lmdb needs an env to be passed for lmdb-open-db"
   (lmdb-open dir))
 
-(def (lmdb-db-update env db key val)
-  (let* ((txn (lmdb-txn-begin env))
-	 (bytes (lmdb-get txn db key))
-	 (current (if bytes
-		    (call-with-input-u8vector (uncompress bytes) read-json)
-		    #f))
-	 (new (if (table? current)
-		(hash-put! current val #t)))
-	 (final (compress (call-with-output-u8vector [] (cut write-json new <>)))))
+(def (lmdb-db-update key val)
+  (let* ((txn (lmdb-txn-begin :db-env))
+         (bytes (lmdb-get txn :db-db key))
+         (current (if bytes
+                    (call-with-input-u8vector (uncompress bytes) read-json)
+                    #f))
+         (new (if (table? current)
+                (hash-put! current val #t)))
+         (final (compress (call-with-output-u8vector [] (cut write-json new <>)))))
     ;;(bytes (call-with-output-u8vector [] (cut write-json val <>)))
     ;; (bytes (compress bytes))
     (try
-     (lmdb-put txn db key final)
+     (lmdb-put txn :db-db key final)
      (lmdb-txn-commit txn)
      (catch (e)
        (lmdb-txn-abort txn)
        (raise e)))))
 
-(def (lmdb-db-get env db key)
-  (let (txn (lmdb-txn-begin env))
+(def (lmdb-db-get key)
+  (let (txn (lmdb-txn-begin :db-env))
     (try
-     (let* ((bytes (lmdb-get txn db key))
+     (let* ((bytes (lmdb-get txn :db-db key))
 	    (val (if bytes
 		   (call-with-input-u8vector (uncompress bytes) read-json)
 		   #f)))
@@ -677,23 +645,26 @@
        val)
      (catch (e)
        (lmdb-txn-abort txn)
-       (display e)
-       (displayln "error kunabi-store-get: key:" key)
-       ;;(raise e)
-       ))))
+       ;;(display e)
+       ;;(displayln "error kunabi-store-get: key:" key)
+       (raise e)))))
 
-(def (lmdb-db-put env db key val)
+(def (lmdb-db-put key val)
   (let* ((bytes (call-with-output-u8vector [] (cut write-json val <>)))
 	 (bytes (compress bytes))
-	 (txn (lmdb-txn-begin env)))
+	 (txn (lmdb-txn-begin :db-env)))
     (try
-     (lmdb-put txn db key bytes)
+     (lmdb-put txn :db-db key bytes)
      (lmdb-txn-commit txn)
      (catch (e)
        (lmdb-txn-abort txn)
        (raise e)))))
 
-;;(def records (db-open db-type))
+(def (lmdb-db-close)
+  "noop"
+  (display "noop"))
+
+;;(def records (db-open :db-type))
 
 ;;(def env records)
 
