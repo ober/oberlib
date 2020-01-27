@@ -545,14 +545,14 @@
 
 (def (db-open type dir)
   (cond
-   ((equal? type 'leveldb)
+   ((equal? type leveldb:)
     (set! :db-type 'leveldb)
     (leveldb-db-open dir))
    ((equal? type 'lmdb)
     (set! :db-type 'lmdb)
     (lmdb-db-open dir))
    (else
-    (displayln "Unknown :db-type: " type)
+    (displayln "Unknown type: " type " of: " (type-of type))
     (exit 2))))
 
 ;;(def db-dir (or (getenv "oberlibdb" #f) ".")) ;;(format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
@@ -564,15 +564,17 @@
    ((equal? :db-type 'leveldb)
     (leveldb-db-close))
    (else
-    (displayln "Unknown :db-type: " :db-type)
+    (displayln "Unknown db-type:12 " :db-type)
     (exit 2))))
 
 (def (db-key? key)
   (cond
    ((equal? :db-type 'lmdb)
     (or (lmdb-db-get key) #f))
+   ((equal? :db-type 'leveldb)
+    (or (leveldb-db-get key) #f))
    (else
-    (displayln "Unknown :db-type: " :db-type)
+    (displayln "Unknown :db-type 22 " :db-type)
     (exit 2))))
 
 (def (db-batch key value)
@@ -582,7 +584,7 @@
    ((equal? :db-type 'leveldb)
     (leveldb-db-batch key value))
    (else
-    (displayln "Unknown :db-type: " :db-type)
+    (displayln "Unknown :db-type: 23 " :db-type)
     (exit 2))))
 
 (def (db-write)
@@ -592,7 +594,7 @@
    ((equal? :db-type 'leveldb)
     (leveldb-db-write))
    (else
-    (displayln "Unknown :db-type: " :db-type)
+    (displayln "Unknown :db-type: 24 " :db-type)
     (exit 2))))
 
 (def (db-delete key)
@@ -602,7 +604,7 @@
    ((equal? :db-type 'leveldb)
     (leveldb-db-delete key))
    (else
-    (displayln "Unknown :db-type: " :db-type)
+    (displayln "Unknown :db-type: 24" :db-type)
     (exit 2))))
 
 ;; leveldb helpers
