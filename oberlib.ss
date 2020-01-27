@@ -574,12 +574,22 @@
     (displayln "Unknown :db-type: " :db-type)
     (exit 2))))
 
-(def (db-batch batch key value)
+(def (db-batch key value)
   (cond
    ((equal? :db-type 'lmdb)
     (lmdb-db-put key value))
    ((equal? :db-type 'leveldb)
-    (leveldb-db-put key value))
+    (leveldb-db-batch key value))
+   (else
+    (displayln "Unknown :db-type: " :db-type)
+    (exit 2))))
+
+(def (db-write)
+  (cond
+   ((equal? :db-type 'lmdb)
+    (+ 1 1)) ;;noop
+   ((equal? :db-type 'leveldb)
+    (leveldb-db-write))
    (else
     (displayln "Unknown :db-type: " :db-type)
     (exit 2))))
@@ -595,18 +605,19 @@
     (exit 2))))
 
 ;; leveldb helpers
-(def (leveldb-db-list)
-  (def itor (leveldb-iterator records))
-  (leveldb-iterator-seek-first itor)
-  (while (leveldb-iterator-valid? itor)
-    (begin
-      (print-record
-       (leveldb-iterator-value itor))
-      (leveldb-iterator-next itor)))
-  (leveldb-iterator-close itor))
+;; (def (leveldb-db-list)
+;;   (def itor (leveldb-iterator records))
+;;   (leveldb-iterator-seek-first itor)
+;;   (while (leveldb-iterator-valid? itor)
+;;     (begin
+;;       (print-record
+;;        (leveldb-iterator-value itor))
+;;       (leveldb-iterator-next itor)))
+;;   (leveldb-iterator-close itor))
 
 (def (leveldb-db-open dir)
-  (set! :db-db (leveldb-open dir)))
+  (set! :db-db (leveldb-open dir))
+  (set! :db-wb (leveldb-writebatch)))
 
 (def (leveldb-db-close)
   (leveldb-close :db-db))
@@ -641,11 +652,17 @@
 
 (def (leveldb-db-batch key value)
   "Add a put to the writeback pending db-write"
-  (leveldb-writebatch-put :db-wb key value))
+  (try
+   (leveldb-writebatch-put :db-wb key (object->u8vector value))
+   (catch (e)
+     (raise e))))
 
 (def (leveldb-db-write)
   "This writes out all pending batch writes to db"
-  (leveldb-write :db-db :db-wb))
+  (try
+   (leveldb-write :db-db :db-wb)
+   (catch (e)
+     (raise e))))
 
 ;; lmdb specifics
 
@@ -719,11 +736,6 @@
 
 (defrules ignore-errors ()
   ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
-
-(def (for-each! list fun)
-  (match list
-    ([elem . more] (fun elem) (for-each! more fun))
-    (_ (void))))
 
 (defrules with-list-builder ()
   ((_ (c r) body1 body+ ...) (call-with-list-builder (λ (c r) body1 body+ ...)))
