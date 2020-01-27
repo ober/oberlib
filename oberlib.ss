@@ -594,6 +594,16 @@
     (exit 2))))
 
 ;; leveldb helpers
+(def (leveldb-db-list)
+  (def itor (leveldb-iterator records))
+  (leveldb-iterator-seek-first itor)
+  (while (leveldb-iterator-valid? itor)
+    (begin
+      (print-record
+       (leveldb-iterator-value itor))
+      (leveldb-iterator-next itor)))
+  (leveldb-iterator-close itor))
+
 (def (leveldb-db-open dir)
   (set! :db-db (leveldb-open dir)))
 
