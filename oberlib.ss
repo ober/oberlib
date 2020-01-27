@@ -510,6 +510,7 @@
 ;;;; DB OPERATIONS
 (def :db-db #!void)
 (def :db-env #!void)
+(def :db-wb #!void)
 (def :db-type #!void)
 
 (def (db-put key value)
@@ -637,6 +638,14 @@
    (leveldb-delete :db-db key)
    (catch (e)
      (raise e))))
+
+(def (leveldb-db-batch key value)
+  "Add a put to the writeback pending db-write"
+  (leveldb-writebatch-put :db-wb key value))
+
+(def (leveldb-db-write)
+  "This writes out all pending batch writes to db"
+  (leveldb-write :db-db :db-wb))
 
 ;; lmdb specifics
 
