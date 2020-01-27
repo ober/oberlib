@@ -737,10 +737,6 @@
 (defrules ignore-errors ()
   ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
 
-(defrules with-list-builder ()
-  ((_ (c r) body1 body+ ...) (call-with-list-builder (λ (c r) body1 body+ ...)))
-  ((_ (c) body1 body+ ...) (with-list-builder (c _) body1 body+ ...)))
-
 (def (subpath top . sub-components)
   (path-expand (string-join sub-components "/") top))
 
