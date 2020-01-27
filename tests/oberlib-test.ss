@@ -2,6 +2,7 @@
 
 (import :std/iter
         :std/format
+        :std/db/leveldb
         :std/db/lmdb
         :std/generic
         "~/src/oberlib/oberlib.ss")
@@ -60,8 +61,15 @@
     (if (equal? update fetched-value)
       (display "OK: ")
       (display "FAIL: "))
-    (displayln (format "Update: value: ~a" fetched-value)))
-  )
+    (displayln (format "Update: value: ~a origin: ~a" fetched-value value)))
+  ;; batch
+  (leveldb-db-batch "a" "is for apple")
+  (leveldb-db-write)
+  (let ((fetched-value (leveldb-db-get "a")))
+    (if (equal? fetched-value "is for apple")
+      (display "OK: ")
+      (display "FAIL: "))
+    (displayln "Val: a fetched: " fetched-value " original: is for apple")))
 
 (def (test-db-generics type dir)
   (let ((key "omg")
