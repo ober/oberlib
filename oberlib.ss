@@ -466,13 +466,6 @@
       (bytes->string (base64-decode val))
       alt)))
 
-(def (default-headers basic)
-  [
-   ["Accept" :: "*/*"]
-   ["Content-type" :: "application/json"]
-   ["Authorization" :: basic ]
-   ])
-
 (def (present-item item)
   "Given a random object, print it out to the stdout"
   (cond
