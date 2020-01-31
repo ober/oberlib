@@ -182,15 +182,19 @@
      (display-exception e))))
 
 (def (rest-call-get uri headers)
+  (print-curl "get" uri headers "")
   (http-get uri headers: headers))
 
 (def (rest-call-post uri headers data)
+  (print-curl "post" uri headers data)
   (http-post uri headers: headers data: data))
 
 (def (rest-call-put uri headers data)
+  (print-curl "put" uri headers data)
   (http-put uri headers: headers data: data))
 
 (def (rest-call-delete uri headers)
+  (print-curl "delete" uri headers "")
   (http-delete uri headers: headers))
 
 (def (do-post uri headers data)
