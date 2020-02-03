@@ -4,6 +4,8 @@
 
 (import
   :gerbil/gambit
+  :gerbil/gambit/bits
+  :gerbil/gambit/exact
   :gerbil/gambit/ports
   :std/crypto/cipher
   :std/crypto/etc
