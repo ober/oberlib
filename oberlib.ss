@@ -521,26 +521,3 @@
 
 (def (path-is-directory? path (follow-symlinks? #f))
   (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
-
-;; from github/fare/gerbil-utils.
-(def (string-substitute new-char old-char string
-                        from-end: (from-end #f)
-                        start: (start #f)
-                        end: (end #f)
-                        count: (count #f))
-  (let* ((l (string-length string))
-         (new-string (make-string l))
-         (k 0))
-    (for ((i (in-iota l)))
-      (let ((char (string-ref string i)))
-        (string-set! new-string i (if (and (eqv? char old-char)
-                                           (or (not start) (<= start i))
-                                           (or (not end) (< i end))
-                                           (or (not count) (< k count)))
-                                    (begin (increment! k) new-char)
-                                    char))))
-    new-string))
-
-(defrules increment! ()
-  ((_ var) (increment! var 1))
-  ((_ var increment) (set! var (+ var increment))))
