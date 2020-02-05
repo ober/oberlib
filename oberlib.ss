@@ -474,9 +474,10 @@
     (displayln (hash->string item)))
    ((or (string? item) (list? item))
     (displayln item))
+   ((eof-object? item)
+    (displayln "got eof"))
    (else
     (displayln "present-item: unknown:" item))))
-
 
 (def (find-files path
 		 (pred? true)
