@@ -528,7 +528,7 @@
    Return cached info if under expiration time.
    Otherwise, execute thunk/process and write to cache file.
    Returning data"
-  (let ((results #f)
+  (let* ((results #f)
         (cfe (file-exists? cache-file))
         (ms (when cfe (modified-since? cache-file expiration))))
     (if (and cfe
