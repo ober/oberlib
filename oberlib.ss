@@ -530,7 +530,7 @@
    Returning data"
   (let ((results #f)
         (cfe (file-exists? cache-file))
-        (ms (modified-since? cache-file 86400)))
+        (ms (when cfe (modified-since? cache-file expiration))))
     (if (and cfe
              ms)
       (begin
