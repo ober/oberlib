@@ -522,3 +522,27 @@
 
 (def (path-is-directory? path (follow-symlinks? #f))
   (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
+
+(def (cache-or-run cache-file expiration process)
+  "Given a procedure, check to see if cache exists within expiration time
+   Return cached info if under expiration time.
+   Otherwise, execute thunk/process and write to cache file.
+   Returning data"
+  (let ((results #f)
+        (cfe (file-exists? cache-file))
+        (mtime (when cfe (file-info-last-modification-time (file-info cache-file)) #f)))
+    (if cfe
+      (set! results (yaml-load cache-file))
+      (begin
+        (set! results (eval process))
+        (yaml-dump cache-file results)))
+  results))
+
+(def (modified-since? file secs-ago)
+  "Check file mtime and determine if file is older than secs-ago"
+  (let* ((now (float->int (time->seconds (current-time))))
+         (mtime (time->seconds (file-info-last-modification-time (file-info file))))
+         (diff (- now mtime)))
+    (if (< diff secs-ago)
+      #t
+      #f)))
