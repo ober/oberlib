@@ -529,18 +529,33 @@
    Otherwise, execute thunk/process and write to cache file.
    Returning data"
   (let* ((results #f)
-        (cfe (file-exists? cache-file))
-        (ms (when cfe (modified-since? cache-file expiration))))
+         (cfe (file-exists? cache-file))
+         (ms (when cfe (modified-since? cache-file expiration))))
     (if (and cfe
              ms)
       (begin
         (dp "cache-or-run: cache hit!")
-        (set! results (yaml-load cache-file)))
+        (set! results (read-obj-from-file cache-file)))
       (begin
         (dp "cache-or-run: cache miss :[")
         (set! results (eval process))
-        (yaml-dump cache-file results)))
+        (write-obj-to-file cache-file results)))
   results))
+
+(def (write-obj-to-file out-file obj)
+  "Serialize object to a file"
+  (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
+    (lambda ()
+      (write-string (base64-encode (object->u8vector obj))))))
+
+(def (read-obj-from-file in-file)
+  "Serialize object to a file"
+  (try
+   (u8vector->object
+    (base64-decode
+     (read-file-string in-file)))
+   (catch (e)
+     (raise (e)))))
 
 (def (modified-since? file secs-ago)
   "Check file mtime and determine if file is older than secs-ago"
