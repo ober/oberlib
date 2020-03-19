@@ -555,7 +555,7 @@
     (base64-decode
      (read-file-string in-file)))
    (catch (e)
-     (raise (e)))))
+     (display-exception e))))
 
 (def (modified-since? file secs-ago)
   "Check file mtime and determine if file is older than secs-ago"
