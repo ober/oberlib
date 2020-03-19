@@ -533,15 +533,18 @@
         (ms (modified-since? cache-file 86400)))
     (if (and cfe
              ms)
-      (set! results (yaml-load cache-file))
       (begin
+        (dp "cache-or-run: cache hit!")
+        (set! results (yaml-load cache-file)))
+      (begin
+        (dp "cache-or-run: cache miss :[")
         (set! results (eval process))
         (yaml-dump cache-file results)))
   results))
 
 (def (modified-since? file secs-ago)
   "Check file mtime and determine if file is older than secs-ago"
-  (let* ((now (float->int (time->seconds (current-time))))
+  (let* ((now (float->int (time->seconds (builtin-current-time))))
          (mtime (time->seconds (file-info-last-modification-time (file-info file))))
          (diff (- now mtime)))
     (if (< diff secs-ago)
