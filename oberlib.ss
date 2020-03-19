@@ -530,8 +530,9 @@
    Returning data"
   (let ((results #f)
         (cfe (file-exists? cache-file))
-        (mtime (when cfe (file-info-last-modification-time (file-info cache-file)) #f)))
-    (if cfe
+        (ms (modified-since? cache-file 86400)))
+    (if (and cfe
+             ms)
       (set! results (yaml-load cache-file))
       (begin
         (set! results (eval process))
