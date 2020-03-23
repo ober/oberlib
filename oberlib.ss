@@ -472,10 +472,10 @@
   (cond
    ((table? item)
     (displayln (hash->string item)))
-   ((or (string? item) (list? item))
+   ((or (string? item) (list? item) (number? item))
     (displayln item))
    ((eof-object? item)
-    (displayln "got eof"))
+    (displayln "eof"))
    (else
     (displayln "present-item: unknown:" item))))
 
@@ -528,6 +528,7 @@
    Return cached info if under expiration time.
    Otherwise, execute thunk/process and write to cache file.
    Returning data"
+  (dp (present-item cache-file))
   (let* ((results #f)
          (cfe (file-exists? cache-file))
          (ms (when cfe (modified-since? cache-file expiration))))
