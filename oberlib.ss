@@ -572,9 +572,11 @@
 
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
-  (when (table? hsh)
-    (let (sym-hsh (hash))
-      (hash-for-each
-       (lambda (k v)
-         (hash-put! sym-hsh (string->symbol k) v)))
-      sym-hsh)))
+  (unless (table? hsh)
+    (error "hash is not table." (type-of hsh)))
+  (let (sym-hsh (hash))
+    (hash-for-each
+     (lambda (k v)
+       (hash-put! sym-hsh (string->symbol k) v))
+     hsh)
+    sym-hsh))
