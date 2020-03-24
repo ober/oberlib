@@ -570,7 +570,7 @@
       #t
       #f)))
 
-(def (sym-hash-keys hsh)
+(def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
   (when (table? hsh)
     (let (sym-hsh (hash))
