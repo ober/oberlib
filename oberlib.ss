@@ -569,3 +569,12 @@
     (if (< diff secs-ago)
       #t
       #f)))
+
+(def (sym-hash-keys hsh)
+  "Convert all keys from strings to symbols, nondestructively"
+  (when (table? hsh)
+    (let (sym-hsh (hash))
+      (hash-for-each
+       (lambda (k v)
+         (hash-put! sym-hsh (string->symbol k) v)))
+      sym-hsh)))
