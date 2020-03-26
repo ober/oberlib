@@ -458,7 +458,9 @@
 
   (let* ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
          (safe-word (write-uri-encoded str uri-encoding)))
-    safe-word))
+    (if (string? safe-word)
+      safe-word
+      str)))
 
 (def (get-if-set-b64 var alt)
   "Return the value of an env var if it is set, decoded from b64, else return alt"
