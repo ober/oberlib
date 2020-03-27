@@ -133,6 +133,7 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
+  (pi (format "type: ~a uri: ~a headers: ~a data: ~a" type uri headers data))
   ;;(displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
@@ -147,7 +148,7 @@
        ((string=? type "post")
         (displayln (format "curl -X POST -H \'~a\' -d \'~a\' ~a" heads data uri)))
        ((string=? type "delete")
-        (displayln (format "curl -X DELETE -H \'~a\' -d \'~a\' ~a" heads data uri)))
+        (displayln (format "curl -X DELETE -H \'~a\' ~a" heads uri)))
        (else
         (displayln "unknown format " type))))))
 
@@ -481,6 +482,12 @@
     (displayln item))
    ((eof-object? item)
     (displayln "eof"))
+   ((void? item)
+    (displayln "Null"))
+   ((boolean? item)
+    (if item
+      (displayln "True")
+      (displayln "False")))
    (else
     (displayln "present-item: unknown:" item))))
 
