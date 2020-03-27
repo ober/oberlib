@@ -582,7 +582,7 @@
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
   (unless (table? hsh)
-    (error "hash is not table." (type-of hsh)))
+    (error "hsh is not table." (type-of hsh)))
   (let (sym-hsh (hash))
     (hash-for-each
      (lambda (k v)
