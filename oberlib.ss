@@ -43,7 +43,6 @@
 (import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
 
-
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
   (if (and (string? string)
@@ -133,7 +132,6 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
-  (pi (format "type: ~a uri: ~a headers: ~a data: ~a" type uri headers data))
   ;;(displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
@@ -178,6 +176,7 @@
             (rest-call-delete uri headers)))))
      (let ((status (request-status reply))
            (text (request-text reply)))
+
        (if (success? status)
          [ #t (from-json text) ]
          [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
@@ -369,7 +368,7 @@
           (base64-encode
            (string->utf8 (format "~a:~a" user password)))))
 
-(def (def-num num)
+(def (any->int num)
   (if (string? num)
     (string->number num)
     num))
