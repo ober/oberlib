@@ -85,7 +85,7 @@
   (try
    (with-input-from-string json read-json)
    (catch (e)
-     (displayln "error parsing json " e))))
+     (display-exception e))))
 
 (def (epoch->date epoch)
   (cond
