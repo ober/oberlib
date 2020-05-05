@@ -494,11 +494,12 @@
 		 (pred? true)
 		 recurse?: (recurse? true)
 		 follow-symlinks?: (follow-symlinks? #f))
-  (with-list-builder (collect!)
-		     (walk-filesystem-tree! path
-					    (λ (file) (when (pred? file) (collect! file)))
-					    recurse?: recurse?
-					    follow-symlinks?: follow-symlinks?)))
+  (with-list-builder
+   (collect!)
+   (walk-filesystem-tree! path
+                          (λ (file) (when (pred? file) (collect! file)))
+                          recurse?: recurse?
+                          follow-symlinks?: follow-symlinks?)))
 
 (def (walk-filesystem-tree!
       path
