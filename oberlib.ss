@@ -43,6 +43,8 @@
 (import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
 
+(def JSON (getenv "JSON" #f))
+
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
   (if (and (string? string)
@@ -178,7 +180,9 @@
            (text (request-text reply)))
 
        (if (success? status)
-         [ #t (from-json text) ]
+         [ #t (if JSON
+                text
+                (from-json text)) ]
          [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
    (catch (e)
      (display-exception e))))
