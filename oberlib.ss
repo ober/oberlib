@@ -134,7 +134,7 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
-  ;;(displayln headers)
+  (displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
     (when do-curl
@@ -576,12 +576,14 @@
 
 (def (modified-since? file secs-ago)
   "Check file mtime and determine if file is older than secs-ago"
-  (let* ((now (float->int (time->seconds (builtin-current-time))))
-         (mtime (time->seconds (file-info-last-modification-time (file-info file))))
-         (diff (- now mtime)))
-    (if (< diff secs-ago)
-      #t
-      #f)))
+  (if (file-exists? file)
+    (let* ((now (float->int (time->seconds (builtin-current-time))))
+           (mtime (time->seconds (file-info-last-modification-time (file-info file))))
+           (diff (- now mtime)))
+      (if (< diff secs-ago)
+        #t
+        #f))
+    #f))
 
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
