@@ -134,7 +134,7 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
-  (displayln headers)
+;;  (displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
     (when do-curl
@@ -595,3 +595,9 @@
        (hash-put! sym-hsh (string->symbol k) v))
      hsh)
     sym-hsh))
+
+(def (lines-to-spaces paragraph)
+  "Convert newlines to spaces"
+  (if (string? paragraph)
+    (pregexp-replace* (string #\newline) paragraph " ")
+    paragraph))
