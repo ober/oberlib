@@ -263,9 +263,7 @@
       (for (var vars)
         (let ((val (getenv var #f)))
           (if (not val)
-            (begin
-              (displayln "Error: Variable " var " is used in the template, but not defined in the environment")
-              (exit 2))
+            (error "Error: Variable " var " is used in the template, but not defined in the environment")
             (set! set-vars (cons val set-vars)))))
       (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
       (apply format newstr set-vars))))
@@ -599,5 +597,5 @@
 (def (lines-to-spaces paragraph)
   "Convert newlines to spaces"
   (if (string? paragraph)
-    (pregexp-replace* (string #\newline) paragraph " ")
+    (pregexp-replace* (string #\newline) paragraph (string #\space))
     paragraph))
