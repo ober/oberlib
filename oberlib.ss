@@ -36,7 +36,6 @@
   :std/text/zlib
   :std/xml/ssax)
 
-
 (export #t)
 
 (import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
@@ -251,6 +250,25 @@
 
 (def (interpol str)
   (displayln (interpol-from-env str)))
+
+(def (hash-interpol re delim str hsh)
+  "Given a RE, replace all instances in str with val from key matching RE"
+  (unless (and
+            (string? str)
+            (hash? hsh)
+            re)
+    str)
+  (let* ((regy (pregexp re))
+         (vars (remove-bad-matches (match-regexp regy str) delim))
+         (newstr (pregexp-replace* regy str "~a"))
+         (set-vars []))
+      (for (var vars)
+        (let ((val (hash-get hsh var)))
+          (if (not val)
+            (error "Error: Variable " var " is used in the template, but not defined in the hash")
+            (set! set-vars (cons val set-vars)))))
+      (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+      (apply format newstr set-vars))))
 
 (def (interpol-from-env str)
   (if (not (string? str))
