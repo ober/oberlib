@@ -251,6 +251,13 @@
 (def (interpol str)
   (displayln (interpol-from-env str)))
 
+(def (make-format-safe str)
+  "Replace all ~ to ~~ except [~ to be safe for format use"
+  (unless (string? str)
+    str)
+  (let ((regy (pregexp "(?:[^\\[])(\\~)")))
+    (pregexp-replace* regy str " ~~")))
+
 (def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
   (unless (and
@@ -260,7 +267,7 @@
     str)
   (let* ((regy (pregexp re))
          (vars (remove-bad-matches (match-regexp regy str) delim))
-         (newstr (pregexp-replace* regy str fmt))
+         (newstr (pregexp-replace* regy (make-format-safe str) fmt))
          (set-vars []))
     (for (var vars)
       (let ((val (hash-get hsh var)))
