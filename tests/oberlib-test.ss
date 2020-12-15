@@ -2,6 +2,8 @@
 
 (import :std/iter
         :std/format
+        :std/pregexp
+        :std/sugar
         :std/db/leveldb
         :std/db/lmdb
         :std/generic
@@ -92,9 +94,22 @@
       (displayln type ": key: " key " new-value: " new-value " fetched: " fetched-value))
     ))
 
-;; Run 'em!
-(test-lmdb "/tmp/lmdb")
-(test-leveldb "/tmp/leveldb")
-(displayln "<---- Db generic")
-(test-db-generics 'lmdb "/tmp/generics.lmdb")
-(test-db-generics 'leveldb "/tmp/generics.leveldb")
+(def (test-hash-interpol-at-names)
+  (let* ((re "(?:^|\\s)@([a-zA-Z0-9]*)")
+         (delim "@")
+         (str "@barbaz says this is a test for @foobar and @foobaz but not for jeff@example.com")
+         (hsh (hash ("foobar" "John Doe")("foobaz" "Jane Doe")("barbaz" "Jeff Bono")))
+         (expected " Jeff Bono says this is a test for John Doe and Jane Doe but not for jeff@example.com")
+         (results (hash-interpol re delim str hsh)))
+    (if (string=? expected results)
+      (displayln "test-hash-interpol-at-names: OK")
+      (displayln "test-hash-interpol-at-names: FAIL! " results))))
+
+(test-hash-interpol-at-names)
+
+  ;; Run 'em!
+;; (test-lmdb "/tmp/lmdb")
+;; (test-leveldb "/tmp/leveldb")
+;; (displayln "<---- Db generic")
+;; (test-db-generics 'lmdb "/tmp/generics.lmdb")
+;; (test-db-generics 'leveldb "/tmp/generics.leveldb")
