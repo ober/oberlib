@@ -133,7 +133,7 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
-;;  (displayln headers)
+  ;;  (displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
     (when do-curl
@@ -255,20 +255,20 @@
   "Given a RE, replace all instances in str with val from key matching RE"
   (unless (and
             (string? str)
-            (hash? hsh)
+            (table? hsh)
             re)
     str)
   (let* ((regy (pregexp re))
-         (vars (remove-bad-matches (match-regexp regy str) delim))
-         (newstr (pregexp-replace* regy str "~a"))
+         (vars (remove-bad-matches (match-regexp regy str) "@"))
+         (newstr (pregexp-replace* regy str " ~a"))
          (set-vars []))
-      (for (var vars)
-        (let ((val (hash-get hsh var)))
-          (if (not val)
-            (error "Error: Variable " var " is used in the template, but not defined in the hash")
-            (set! set-vars (cons val set-vars)))))
-      (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
-      (apply format newstr set-vars))))
+    (for (var vars)
+      (let ((val (hash-get hsh var)))
+        (if (not val)
+          (error "Error: Variable " var " is used in the template, but not defined in the hash")
+          (set! set-vars (cons val set-vars)))))
+    (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+    (apply format newstr (reverse set-vars))))
 
 (def (interpol-from-env str)
   (if (not (string? str))
@@ -277,7 +277,6 @@
            (vars (remove-bad-matches (match-regexp ruby str) "#"))
            (newstr (pregexp-replace* ruby str "~a"))
            (set-vars []))
-
       (for (var vars)
         (let ((val (getenv var #f)))
           (if (not val)
@@ -573,7 +572,7 @@
         (dp "cache-or-run: cache miss :[")
         (set! results (eval process))
         (write-obj-to-file cache-file results)))
-  results))
+    results))
 
 (def (write-obj-to-file out-file obj)
   "Serialize object to a file"
