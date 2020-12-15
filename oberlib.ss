@@ -251,7 +251,7 @@
 (def (interpol str)
   (displayln (interpol-from-env str)))
 
-(def (hash-interpol re delim str hsh)
+(def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
   (unless (and
             (string? str)
@@ -260,7 +260,7 @@
     str)
   (let* ((regy (pregexp re))
          (vars (remove-bad-matches (match-regexp regy str) "@"))
-         (newstr (pregexp-replace* regy str " ~a"))
+         (newstr (pregexp-replace* regy str fmt))
          (set-vars []))
     (for (var vars)
       (let ((val (hash-get hsh var)))
