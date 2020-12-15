@@ -267,7 +267,7 @@
         (if (not val)
           (error "Error: Variable " var " is used in the template, but not defined in the hash")
           (set! set-vars (cons val set-vars)))))
-    (displayln (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+    (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
     (apply format newstr (reverse set-vars))))
 
 (def (interpol-from-env str)
