@@ -255,8 +255,8 @@
   "Replace all ~ to ~~ except [~ to be safe for format use"
   (unless (string? str)
     str)
-  (let ((regy (pregexp "(?:[^\\[])(\\~)")))
-    (pregexp-replace* regy str " ~~")))
+  (let ((regy (pregexp "(?:[^\\[])(\\~+)")))
+    (pregexp-replace* regy str " ∼")))
 
 (def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
@@ -274,7 +274,7 @@
         (if (not val)
           (error "Error: Variable " var " is used in the template, but not defined in the hash")
           (set! set-vars (cons val set-vars)))))
-    (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
+    (dp (format "hash-interpol: string: |~a| set-vars: |~a| newstr: |~a|" str set-vars newstr))
     (apply format newstr (reverse set-vars))))
 
 (def (interpol-from-env str)
