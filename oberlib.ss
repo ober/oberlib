@@ -629,3 +629,9 @@
   (if (string? paragraph)
     (pregexp-replace* (string #\newline) paragraph (string #\space))
     paragraph))
+
+(def (yon bool)
+  "Return Yes, or No, based on bool"
+  (if bool
+    "Yes"
+    "No"))
