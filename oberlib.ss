@@ -133,7 +133,6 @@
 (defalias hash->str hash->string)
 
 (def (print-curl type uri headers data)
-  ;;  (displayln headers)
   (let ((heads "Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
     (when do-curl
@@ -177,12 +176,19 @@
             (rest-call-delete uri headers)))))
      (let ((status (request-status reply))
            (text (request-text reply)))
-
-       (if (success? status)
-         [ #t (if JSON
-                text
-                (from-json text)) ]
-         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
+       (if JSON
+         [ #f text ]
+         (if (success? status)
+           [ #t (from-json text) ]
+           [ #f (format "Error: got ~a on request. text: ~a~%" status text) ]))))
+   (catch (os-exception? e)
+     (when DEBUG
+       (displayln "procedure: " (os-exception-procedure e))
+       (displayln "arguments: " (os-exception-arguments e))
+       (displayln "code: " (os-exception-code e))
+       (displayln "message: " (os-exception-message e)))
+     (displayln "OK. tls cut short")
+     (exit 0))
    (catch (e)
      (display-exception e))))
 
