@@ -43,6 +43,7 @@
 (declare (not optimize-dead-definitions))
 
 (def JSON (getenv "JSON" #f))
+(setenv "GAMBOPT" "-:tE8,f8,-8,h2097152")
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
@@ -176,11 +177,12 @@
             (rest-call-delete uri headers)))))
      (let ((status (request-status reply))
            (text (request-text reply)))
-       (if JSON
-         [ #f text ]
-         (if (success? status)
-           [ #t (from-json text) ]
-           [ #f (format "Error: got ~a on request. text: ~a~%" status text) ]))))
+       (when JSON
+         (displayln text)
+         (exit 0))
+       (if (success? status)
+         [ #t (from-json text) ]
+         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
    (catch (os-exception? e)
      (when DEBUG
        (displayln "procedure: " (os-exception-procedure e))
