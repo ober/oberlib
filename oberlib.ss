@@ -133,21 +133,29 @@
 
 (defalias hash->str hash->string)
 
+(def (print-curl-headers headers)
+  "Print function for headers passed to print-curl"
+  (let ((results []))
+    (when (list? headers)
+      (for (header headers)
+        (set! results (cons (format " -H \'~a: ~a\'" (car header) (cdr header)) results)))
+      (append-strings results))))
+
 (def (print-curl type uri headers data)
-  (let ((heads "Content-type: application/json")
+  (let ((heads (print-curl-headers headers)) ;;"Content-type: application/json")
         (do-curl (getenv "DEBUG" #f)))
     (when do-curl
       (cond
        ((string=? type "get")
         (if (string=? "" data)
-          (displayln (format "curl -X GET -H \'~a\' ~a" heads uri))
-          (displayln (format "curl -X GET -H \'~a\' -d \'~a\' ~a" heads data uri))))
+          (displayln (format "curl -X GET ~a ~a" heads uri))
+          (displayln (format "curl -X GET ~a -d \'~a\' ~a" heads data uri))))
        ((string=? type "put")
-        (displayln (format "curl -X PUT -H \'~a\' -d \'~a\' ~a" heads data uri)))
+        (displayln (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri)))
        ((string=? type "post")
-        (displayln (format "curl -X POST -H \'~a\' -d \'~a\' ~a" heads data uri)))
+        (displayln (format "curl -X POST ~a -d \'~a\' ~a" heads data uri)))
        ((string=? type "delete")
-        (displayln (format "curl -X DELETE -H \'~a\' ~a" heads uri)))
+        (displayln (format "curl -X DELETE ~a ~a" heads uri)))
        (else
         (displayln "unknown format " type))))))
 
