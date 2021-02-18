@@ -142,9 +142,8 @@
       (append-strings results))))
 
 (def (print-curl type uri headers data)
-  (let ((heads (print-curl-headers headers)) ;;"Content-type: application/json")
-        (do-curl (getenv "DEBUG" #f)))
-    (when do-curl
+  (when (getenv "do_curl" #f)
+    (let ((heads (print-curl-headers headers)))
       (cond
        ((string=? type "get")
         (if (string=? "" data)
@@ -276,6 +275,7 @@
 
 (def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
+  (displayln "re: " re " delim: " delim " str: " str " fmt: " fmt)
   (unless (and
             (string? str)
             (table? hsh)
@@ -291,7 +291,7 @@
           (error "Error: Variable " var " is used in the template, but not defined in the hash")
           (set! set-vars (cons val set-vars)))))
     (dp (format "hash-interpol: string: |~a| set-vars: |~a| newstr: |~a|" str set-vars newstr))
-    (apply format newstr (reverse set-vars))))
+    (apply format newstr set-vars)))
 
 (def (interpol-from-env str)
   (if (not (string? str))
