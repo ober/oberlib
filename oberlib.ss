@@ -135,14 +135,16 @@
 
 (def (print-curl-headers headers)
   "Print function for headers passed to print-curl"
-  (let ((results []))
+  (let ((results [])
+        (final ""))
     (when (list? headers)
       (for (header headers)
         (set! results (cons (format " -H \'~a: ~a\'" (car header) (cdr header)) results)))
-      (append-strings results))))
+      (set! final (append-strings results)))
+    final))
 
 (def (print-curl type uri headers data)
-  (when (getenv "do_curl" #f)
+  (when (getenv "use_curl" #f)
     (let ((heads (print-curl-headers headers)))
       (cond
        ((string=? type "get")
@@ -152,11 +154,13 @@
        ((string=? type "put")
         (displayln (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri)))
        ((string=? type "post")
-        (displayln (format "curl -X POST ~a -d \'~a\' ~a" heads data uri)))
+        (write-string-to-file "data.txt" data)
+        (displayln (format "curl -k -X POST ~a -d@data.txt \'~a\'" heads uri)))
        ((string=? type "delete")
         (displayln (format "curl -X DELETE ~a ~a" heads uri)))
        (else
         (displayln "unknown format " type))))))
+
 
 (def (do-get-generic uri headers)
   (let* ((reply (http-get uri
@@ -195,27 +199,29 @@
        (displayln "procedure: " (os-exception-procedure e))
        (displayln "arguments: " (os-exception-arguments e))
        (displayln "code: " (os-exception-code e))
-       (displayln "message: " (os-exception-message e)))
-     (displayln "OK. tls cut short")
-     (exit 0))
+       (displayln "message: " (os-exception-message e))))
    (catch (e)
      (display-exception e))))
 
 (def (rest-call-get uri headers)
-  (print-curl "get" uri headers "")
-  (http-get uri headers: headers))
+  (if (getenv "use_curl" #f)
+    (print-curl "get" uri headers "")
+    (http-get uri headers: headers)))
 
 (def (rest-call-post uri headers data)
-  (print-curl "post" uri headers data)
-  (http-post uri headers: headers data: data))
+  (if (getenv "use_curl" #f)
+    (print-curl "post" uri headers data)
+    (http-post uri headers: headers data: data)))
 
 (def (rest-call-put uri headers data)
-  (print-curl "put" uri headers data)
-  (http-put uri headers: headers data: data))
+  (if (getenv "use_curl" #f)
+    (print-curl "put" uri headers data)
+    (http-put uri headers: headers data: data)))
 
 (def (rest-call-delete uri headers)
-  (print-curl "delete" uri headers "")
-  (http-delete uri headers: headers))
+  (if (getenv "use_curl" #f)
+    (print-curl "delete" uri headers "")
+    (http-delete uri headers: headers)))
 
 (def (do-post uri headers data)
   (dp (print-curl "post" uri headers data))
@@ -275,7 +281,7 @@
 
 (def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
-  (displayln "re: " re " delim: " delim " str: " str " fmt: " fmt)
+  ;;(displayln "re: " re " delim: " delim " str: " str " fmt: " fmt)
   (unless (and
             (string? str)
             (table? hsh)
@@ -602,6 +608,12 @@
   (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
     (lambda ()
       (write-string (base64-encode (object->u8vector obj))))))
+
+(def (write-string-to-file out-file str)
+  "Write the contents of str to out-file"
+  (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
+    (lambda ()
+      (write-string str))))
 
 (def (read-obj-from-file in-file)
   "Serialize object to a file"
