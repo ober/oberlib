@@ -144,24 +144,22 @@
     final))
 
 (def (print-curl type uri headers data)
-  (when (getenv "use_curl" #f)
-    (let ((heads (print-curl-headers headers)))
-      (cond
-       ((string=? type "get")
-        (if (string=? "" data)
-          (displayln (format "curl -X GET ~a ~a" heads uri))
-          (displayln (format "curl -X GET ~a -d \'~a\' ~a" heads data uri))))
-       ((string=? type "put")
-        (displayln (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri)))
-       ((string=? type "post")
-        (write-string-to-file "data.txt" data)
-        (displayln (format "curl -k -X POST ~a -d@data.txt \'~a\'" heads uri)))
-       ((string=? type "delete")
-        (displayln (format "curl -X DELETE ~a ~a" heads uri)))
-       (else
-        (displayln "unknown format " type))))
-    [ #t "curl"]))
-
+  (let ((heads (print-curl-headers headers)))
+    (cond
+     ((equal? type 'get)
+      (if data
+        (displayln (format "curl -X GET ~a ~a" heads uri))
+        (displayln (format "curl -X GET ~a -d \'~a\' ~a" heads data uri))))
+     ((equal? type 'put)
+      (displayln (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri)))
+     ((equal? type 'post)
+      (write-string-to-file "data.txt" data)
+      (displayln (format "curl -k -X POST ~a -d@data.txt \'~a\'" heads uri)))
+     ((equal? type 'delete)
+      (displayln (format "curl -X DELETE ~a ~a" heads uri)))
+     (else
+      (displayln "unknown format " type))))
+  [ #t "curl" ])
 
 (def (do-get-generic uri headers)
   (let* ((reply (http-get uri
@@ -176,56 +174,49 @@
 (def (rest-call type uri headers (data #f))
   "Wrapper for all http queries that should return json on success.
    We return a list of OK?: #t/#f and results: object"
-  (try
-   (let ((reply
-          (cond
-           ((equal? type 'get)
-            (rest-call-get uri headers))
-           ((equal? type 'post)
-            (rest-call-post uri headers data))
-           ((equal? type 'put)
-            (rest-call-put uri headers data))
-           ((equal? type 'delete)
-            (rest-call-delete uri headers)))))
-     (let ((status (request-status reply))
-           (text (request-text reply)))
-       (when JSON
-         (displayln text)
-         (exit 0))
-       (if (success? status)
-         [ #t (from-json text) ]
-         [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
-   (catch (os-exception? e)
-     (when DEBUG
-       (displayln "procedure: " (os-exception-procedure e))
-       (displayln "arguments: " (os-exception-arguments e))
-       (displayln "code: " (os-exception-code e))
-       (displayln "message: " (os-exception-message e))))
-   (catch (e)
-     (display-exception e))))
+  (if (getenv "use_curl" #f)
+    (print-curl type uri headers data)
+    (try
+     (let ((reply
+            (cond
+             ((equal? type 'get)
+              (rest-call-get uri headers))
+             ((equal? type 'post)
+              (rest-call-post uri headers data))
+             ((equal? type 'put)
+                (rest-call-put uri headers data))
+             ((equal? type 'delete)
+              (rest-call-delete uri headers)))))
+       (let ((status (request-status reply))
+             (text (request-text reply)))
+         (when JSON
+           (displayln text)
+           (exit 0))
+         (if (success? status)
+           [ #t (from-json text) ]
+           [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
+     (catch (os-exception? e)
+       (when DEBUG
+         (displayln "procedure: " (os-exception-procedure e))
+         (displayln "arguments: " (os-exception-arguments e))
+         (displayln "code: " (os-exception-code e))
+         (displayln "message: " (os-exception-message e))))
+     (catch (e)
+       (display-exception e)))))
 
 (def (rest-call-get uri headers)
-  (if (getenv "use_curl" #f)
-    (print-curl "get" uri headers "")
-    (http-get uri headers: headers)))
+  (http-get uri headers: headers))
 
 (def (rest-call-post uri headers data)
-  (if (getenv "use_curl" #f)
-    (print-curl "post" uri headers data)
-    (http-post uri headers: headers data: data)))
+  (http-post uri headers: headers data: data))
 
 (def (rest-call-put uri headers data)
-  (if (getenv "use_curl" #f)
-    (print-curl "put" uri headers data)
-    (http-put uri headers: headers data: data)))
+  (http-put uri headers: headers data: data))
 
 (def (rest-call-delete uri headers)
-  (if (getenv "use_curl" #f)
-    (print-curl "delete" uri headers "")
-    (http-delete uri headers: headers)))
+  (http-delete uri headers: headers))
 
 (def (do-post uri headers data)
-  (dp (print-curl "post" uri headers data))
   (try
    (let* ((reply (http-post uri headers: headers data: data))
           (status (request-status reply))
@@ -237,7 +228,6 @@
      (display-exception e))))
 
 (def (do-get uri)
-  (print-curl "get" uri "" "")
   (let* ((reply (http-get uri))
          (status (request-status reply))
          (text (request-text reply)))
