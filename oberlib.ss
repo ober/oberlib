@@ -158,8 +158,7 @@
      ((equal? type 'delete)
       (displayln (format "curl -X DELETE ~a ~a" heads uri)))
      (else
-      (displayln "unknown format " type))))
-  [ #t "curl" ])
+      (displayln "unknown format " type)))))
 
 (def (do-get-generic uri headers)
   (let* ((reply (http-get uri
