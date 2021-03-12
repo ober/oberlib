@@ -288,7 +288,10 @@
           (error "Error: Variable " var " is used in the template, but not defined in the hash")
           (set! set-vars (cons val set-vars)))))
     (dp (format "hash-interpol: string: |~a| set-vars: |~a| newstr: |~a|" str set-vars newstr))
-    (apply format newstr set-vars)))
+    (try
+     (apply format newstr set-vars)
+     (catch (e)
+       str))))
 
 (def (interpol-from-env str)
   (if (not (string? str))
