@@ -34,6 +34,7 @@
   :std/text/utf8
   :std/text/yaml
   :std/text/zlib
+  :colorstring/colorstring
   :std/xml/ssax)
 
 (export #t)
@@ -171,38 +172,44 @@
       text
       (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
 
-(def (rest-call type uri headers (data #f))
+(def (rest-call type uri headers (data #f) (retry 0))
   "Wrapper for all http queries that should return json on success.
    We return a list of OK?: #t/#f and results: object"
-  (if (getenv "use_curl" #f)
-    (print-curl type uri headers data)
-    (try
-     (let ((reply
-            (cond
-             ((equal? type 'get)
-              (rest-call-get uri headers))
-             ((equal? type 'post)
-              (rest-call-post uri headers data))
-             ((equal? type 'put)
+  (let lp ((count 0))
+    (if (getenv "use_curl" #f)
+      (print-curl type uri headers data)
+      (try
+       (let ((reply
+              (cond
+               ((equal? type 'get)
+                (rest-call-get uri headers))
+               ((equal? type 'post)
+                (rest-call-post uri headers data))
+               ((equal? type 'put)
                 (rest-call-put uri headers data))
-             ((equal? type 'delete)
-              (rest-call-delete uri headers)))))
-       (let ((status (request-status reply))
-             (text (request-text reply)))
-         (when JSON
-           (displayln text)
-           (exit 0))
-         (if (success? status)
-           [ #t (from-json text) ]
-           [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
-     (catch (os-exception? e)
-       (when DEBUG
-         (displayln "procedure: " (os-exception-procedure e))
-         (displayln "arguments: " (os-exception-arguments e))
-         (displayln "code: " (os-exception-code e))
-         (displayln "message: " (os-exception-message e))))
-     (catch (e)
-       (display-exception e)))))
+               ((equal? type 'delete)
+                (rest-call-delete uri headers)))))
+         (let ((status (request-status reply))
+               (text (request-text reply)))
+           (when JSON
+             (displayln text)
+             (exit 0))
+           (if (success? status)
+             [ #t (from-json text) ]
+             [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
+       (catch (os-exception? e)
+         (when DEBUG
+           (displayln "procedure: " (os-exception-procedure e))
+           (displayln "arguments: " (os-exception-arguments e))
+           (displayln "code: " (os-exception-code e))
+           (displayln "message: " (os-exception-message e))))
+       (catch (e)
+         (displayln "count: " count " retry: " retry)
+         (if (< count retry)
+           (begin
+             (displayln "retry #" count)
+             (lp (+ 1 count)))
+           (displayln "boom " e)))))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
@@ -393,7 +400,8 @@
 (def (org-mode-print-row data)
   (when (list? data)
     (for (datum data)
-      (printf "| ~a " datum))
+      (color-reset #f)
+      (color (printf "|[blue]~a " datum)))
     (displayln "|")))
 
 (def (date->custom dt)
