@@ -209,7 +209,7 @@
            (begin
              (displayln "retry #" count)
              (lp (+ 1 count)))
-           (displayln "boom " e)))))))
+           (error (format "Out of retries. Count: ~a error: ~a" count  e))))))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
