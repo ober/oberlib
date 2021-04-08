@@ -146,25 +146,31 @@
 
 (def (print-curl type uri headers data)
   "Print out curl equivalent, or exec it"
-  (let ((curl (make-curl-cmd type uri headers data)))
+  (let ((curl (format-curl-cmd type uri headers data)))
     (if (getenv "debug" #f)
       (displayln curl)
-      (pp (shell-command curl)))))
+      (try
+       (let ((res (shell-command curl #t)))
+         (if (= (car res) 0)
+           [ #t (cdr res) ]
+           [ #f (cdr res) ]))
+       (catch (e)
+         (display-exception e))))))
 
-(def (make-curl-cmd type uri headers data)
+(def (format-curl-cmd type uri headers data)
   (let ((heads (format-curl-headers headers)))
     (cond
      ((equal? type 'get)
       (if data
-        (format "curl -X GET ~a ~a" heads uri)
-        (format "curl -X GET ~a -d \'~a\' ~a" heads data uri)))
+        (format "curl -k -X GET ~a ~a" heads uri)
+        (format "curl -k -X GET ~a -d \'~a\' ~a" heads data uri)))
      ((equal? type 'put)
-      (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri))
+      (format "curl -k -X PUT ~a -d \'~a\' ~a" heads data uri))
      ((equal? type 'post)
       (write-string-to-file "/tmp/data.txt" data)
       (format "curl -k -X POST ~a -d@/tmp/data.txt \'~a\'" heads uri))
      ((equal? type 'delete)
-      (format "curl -X DELETE ~a ~a" heads uri))
+      (format "curl -k -X DELETE ~a ~a" heads uri))
      (else
       (format "unknown format: ~a" type)))))
 
