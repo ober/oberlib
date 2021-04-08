@@ -134,7 +134,7 @@
 
 (defalias hash->str hash->string)
 
-(def (print-curl-headers headers)
+(def (format-curl-headers headers)
   "Print function for headers passed to print-curl"
   (let ((results [])
         (final ""))
@@ -145,22 +145,28 @@
     final))
 
 (def (print-curl type uri headers data)
-  (let ((heads (print-curl-headers headers)))
+  "Print out curl equivalent, or exec it"
+  (let ((curl (make-curl-cmd type uri headers data)))
+    (if (getenv "debug" #f)
+      (displayln curl)
+      (shell-command curl))))
+
+(def (make-curl-cmd type uri headers data)
+  (let ((heads (format-curl-headers headers)))
     (cond
      ((equal? type 'get)
       (if data
-        (displayln (format "curl -X GET ~a ~a" heads uri))
-        (displayln (format "curl -X GET ~a -d \'~a\' ~a" heads data uri))))
+        (format "curl -X GET ~a ~a" heads uri)
+        (format "curl -X GET ~a -d \'~a\' ~a" heads data uri)))
      ((equal? type 'put)
-      (displayln (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri)))
+      (format "curl -X PUT ~a -d \'~a\' ~a" heads data uri))
      ((equal? type 'post)
-      (write-string-to-file "data.txt" data)
-      (displayln (format "curl -k -X POST ~a -d@data.txt \'~a\'" heads uri)))
+      (write-string-to-file "/tmp/data.txt" data)
+      (format "curl -k -X POST ~a -d@/tmp/data.txt \'~a\'" heads uri))
      ((equal? type 'delete)
-      (displayln (format "curl -X DELETE ~a ~a" heads uri)))
+      (format "curl -X DELETE ~a ~a" heads uri))
      (else
-      (displayln "unknown format " type))))
-  [ #t "" ])
+      (format "unknown format: ~a" type)))))
 
 (def (do-get-generic uri headers)
   (let* ((reply (http-get uri
