@@ -149,7 +149,7 @@
   (let ((curl (make-curl-cmd type uri headers data)))
     (if (getenv "debug" #f)
       (displayln curl)
-      (shell-command curl))))
+      (pp (shell-command curl)))))
 
 (def (make-curl-cmd type uri headers data)
   (let ((heads (format-curl-headers headers)))
