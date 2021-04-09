@@ -160,7 +160,8 @@
          (display-exception e))))))
 
 (def (format-curl-cmd type uri headers data)
-  (let ((heads (format-curl-headers headers)))
+  (let ((heads (format-curl-headers headers))
+        (tf (format "/tmp/confluence-~a" (random-integer 10000))))
     (cond
      ((equal? type 'get)
       (if data
@@ -169,8 +170,8 @@
      ((equal? type 'put)
       (format "curl -sS -k -X PUT ~a -d \'~a\' ~a" heads data uri))
      ((equal? type 'post)
-      (write-string-to-file "/tmp/data.txt" data)
-      (format "curl -sS -k -X POST ~a -d@/tmp/data.txt \'~a\'" heads uri))
+      (write-string-to-file tf data)
+      (format "curl -sS -k -X POST ~a -d@~a \'~a\'" heads tf uri))
      ((equal? type 'delete)
       (format "curl -sS -k -X DELETE ~a ~a" heads uri))
      (else
