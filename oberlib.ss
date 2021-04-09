@@ -162,8 +162,8 @@
     (cond
      ((equal? type 'get)
       (if data
-        (format "curl -k -X GET ~a ~a" heads uri)
-        (format "curl -k -X GET ~a -d \'~a\' ~a" heads data uri)))
+        (format "curl -k -X GET ~a -d \'~a\' ~a" heads data uri)
+        (format "curl -k -X GET ~a ~a" heads uri)))
      ((equal? type 'put)
       (format "curl -k -X PUT ~a -d \'~a\' ~a" heads data uri))
      ((equal? type 'post)
