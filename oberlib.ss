@@ -151,9 +151,11 @@
       (displayln curl)
       (try
        (let ((res (shell-command curl #t)))
-         (if (= (car res) 0)
-           [ #t (cdr res) ]
-           [ #f (cdr res) ]))
+         (let ((ec (car res))
+               (txt (cdr res)))
+           (if (= ec 0)
+             [ #t txt ]
+             [ #f txt ])))
        (catch (e)
          (display-exception e))))))
 
@@ -162,15 +164,15 @@
     (cond
      ((equal? type 'get)
       (if data
-        (format "curl -k -X GET ~a -d \'~a\' ~a" heads data uri)
-        (format "curl -k -X GET ~a ~a" heads uri)))
+        (format "curl -sS -k -X GET ~a -d \'~a\' ~a" heads data uri)
+        (format "curl -sS -k -X GET ~a ~a" heads uri)))
      ((equal? type 'put)
-      (format "curl -k -X PUT ~a -d \'~a\' ~a" heads data uri))
+      (format "curl -sS -k -X PUT ~a -d \'~a\' ~a" heads data uri))
      ((equal? type 'post)
       (write-string-to-file "/tmp/data.txt" data)
-      (format "curl -k -X POST ~a -d@/tmp/data.txt \'~a\'" heads uri))
+      (format "curl -sS -k -X POST ~a -d@/tmp/data.txt \'~a\'" heads uri))
      ((equal? type 'delete)
-      (format "curl -k -X DELETE ~a ~a" heads uri))
+      (format "curl -sS -k -X DELETE ~a ~a" heads uri))
      (else
       (format "unknown format: ~a" type)))))
 
