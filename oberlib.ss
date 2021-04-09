@@ -154,7 +154,7 @@
          (let ((ec (car res))
                (txt (cdr res)))
            (if (= ec 0)
-             [ #t txt ]
+             [ #t (if (string? txt) (from-json txt) txt) ]
              [ #f txt ])))
        (catch (e)
          (display-exception e))))))
