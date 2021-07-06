@@ -334,16 +334,17 @@
   "Like pregexp-match but for all matches til end of str"
   (let ((n (string-length str))
         (ix-prs []))
-    (let lp ((start 0))
-      (let* ((pp (pregexp-match-positions pat str start n))
-             (ix-pr (pregexp-match pat str start n)))
-        (if ix-pr
-          (let ((pos (+ 1 (cdar pp))))
-            (set! ix-prs (flatten (cons ix-pr ix-prs)))
-            (if (< pos n)
-              (lp pos)
-              ix-prs))
-          (reverse ix-prs))))))
+    (when (> n 0)
+      (let lp ((start 0))
+        (let* ((pp (pregexp-match-positions pat str start n))
+               (ix-pr (pregexp-match pat str start n)))
+          (if ix-pr
+            (let ((pos (+ 1 (cdar pp))))
+              (set! ix-prs (flatten (cons ix-pr ix-prs)))
+              (if (< pos n)
+                (lp pos)
+                ix-prs))
+            (reverse ix-prs)))))))
 
 (def (style-output infos (style "org-mode"))
   (when (list? infos)
