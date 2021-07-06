@@ -334,7 +334,8 @@
   "Like pregexp-match but for all matches til end of str"
   (let ((n (string-length str))
         (ix-prs []))
-    (when (> n 0)
+    (if (= n 0)
+      []
       (let lp ((start 0))
         (let* ((pp (pregexp-match-positions pat str start n))
                (ix-pr (pregexp-match pat str start n)))
