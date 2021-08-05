@@ -441,7 +441,7 @@
     (string->number num))
    ((void? num)
     0)
-   ((eof-object? item)
+   ((eof-object? num)
     0)
    ((boolean? num)
     (if num
