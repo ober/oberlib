@@ -447,7 +447,8 @@
     (if num
       0
       1))
-   ))
+   ((else
+     0))))
 
 (def (sis item)
   (if item
