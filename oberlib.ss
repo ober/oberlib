@@ -437,6 +437,8 @@
 
 (def (any->int num)
   (cond
+   ((number? num)
+    num)
    ((string? num)
     (string->number num))
    ((void? num)
