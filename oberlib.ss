@@ -436,9 +436,18 @@
            (string->utf8 (format "~a:~a" user password)))))
 
 (def (any->int num)
-  (if (string? num)
-    (string->number num)
-    num))
+  (cond
+   ((string? num)
+    (string->number num))
+   ((void? num)
+    0)
+   ((eof-object? item)
+    0)
+   ((boolean? num)
+    (if num
+      0
+      1))
+   ))
 
 (def (sis item)
   (if item
