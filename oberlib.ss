@@ -129,7 +129,7 @@
          (lambda (k v)
            (set! results (append results [ (format " ~a->" k) (format "~a   " v)])))
          h)
-        (append-strings results))
+        (string-concatenate results))
       "N/A")))
 
 (defalias hash->str hash->string)
@@ -141,7 +141,7 @@
     (when (list? headers)
       (for (header headers)
         (set! results (cons (format " -H \'~a: ~a\'" (car header) (cdr header)) results)))
-      (set! final (append-strings results)))
+      (set! final (string-concatenate results)))
     final))
 
 (def (print-curl type uri headers data)
