@@ -115,6 +115,7 @@
   (let* ((reply (http-delete uri
                              headers: headers))
          (status (request-status reply))
+         (headers (request-headers reply))
          (text (request-text reply)))
     (print-curl "delete" uri "" "")
     (if (success? status)
@@ -182,6 +183,7 @@
   (let* ((reply (http-get uri
                           headers: headers))
          (status (request-status reply))
+         (headers (request-headers reply))
          (text (request-text reply)))
     (print-curl "get" uri "" "")
     (if (success? status)
@@ -206,6 +208,7 @@
                ((equal? type 'delete)
                 (rest-call-delete uri headers)))))
          (let ((status (request-status reply))
+               (headers (request-headers reply))
                (text (request-text reply)))
            (when JSON
              (displayln text)
@@ -227,6 +230,7 @@
              (lp (+ 1 count)))
            (error (format "Out of retries. Count: ~a error: ~a" count  e))))))))
 
+
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
 
@@ -243,6 +247,7 @@
   (try
    (let* ((reply (http-post uri headers: headers data: data))
           (status (request-status reply))
+          (headers (request-headers reply))
           (text (request-text reply)))
      (if (success? status)
        text
