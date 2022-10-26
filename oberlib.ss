@@ -59,10 +59,9 @@
   (let* ((string (strip-both string))
          (our-size (string-length string))
          (delta (if (> size our-size)
-                  (- size our-size)
+                   (- size our-size)
                   0)))
-    ;;    (displayln "fss: delta: " delta " string: " string " our-size: " our-size " size: " size)
-    (format " ~a~a" string (make-string delta #\space))))
+    (format "~a~a " string (make-string delta #\space))))
 
 (def (dp msg)
   (when DEBUG
@@ -394,10 +393,10 @@
         (for (head header)
           (let ((sep (if (= count 0) "|" "+")))
             (display
-             (format "~a~a "
+             (format "~a~a"
                      sep
                      (make-string
-                      (+ 1
+                      (+ 2
                          (hash-get sizes
                                    (nth count header))) #\-))))
           (set! count (1+ count))))
