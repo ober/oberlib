@@ -361,7 +361,9 @@
            (rows (cdr data))
            (header-sep "|"))
       (for (head header)
-        (unless (string? head) (displayln "head is not string: " head) (exit 2))
+        (unless (string? head)
+          (displayln "head is not string: " head)
+          (exit 2))
         (hash-put! sizes head (string-length head)))
       (for (row rows)
         (let (count 0)
@@ -371,7 +373,6 @@
                    (this-size (if (string? column) (string-length column) (string-length (format "~a" column)))))
               (when (> this-size current-size)
                 (hash-put! sizes col-name this-size))
-              ;;		      (displayln "colname: " col-name " col: " count " current-size: " current-size " this-size: " this-size " column: " column)
               (set! count (1+ count))))))
 
       (cond
@@ -381,21 +382,35 @@
         (set! header-sep "||")))
 
       (for (head header)
-        (display (format "~a~a" header-sep (format-string-size head (hash-get sizes head)))))
+        (display
+         (format "~a~a" header-sep
+                 (format-string-size
+                  head
+                  (hash-get sizes head)))))
 
       ;; print header
       (displayln header-sep)
       (let ((count 0))
         (for (head header)
           (let ((sep (if (= count 0) "|" "+")))
-            (display (format "~a~a" sep (make-string (+ 2 (hash-get sizes (nth count header))) #\-))))
+            (display
+             (format "~a~a "
+                     sep
+                     (make-string
+                      (+ 1
+                         (hash-get sizes
+                                   (nth count header))) #\-))))
           (set! count (1+ count))))
       (displayln "|")
 
       (for (row rows)
         (let (count 0)
           (for (col row)
-            (display (format "|~a " (format-string-size col (hash-ref sizes (nth count header)))))
+            (display
+             (format "|~a "
+                     (format-string-size
+                      col
+                      (hash-ref sizes (nth count header)))))
             (set! count (1+ count))))
         (displayln "|"))
       )))
@@ -575,9 +590,9 @@
     (displayln "present-item: unknown:" item))))
 
 (def (find-files path
-		 (pred? true)
-		 recurse?: (recurse? true)
-		 follow-symlinks?: (follow-symlinks? #f))
+		         (pred? true)
+		         recurse?: (recurse? true)
+		         follow-symlinks?: (follow-symlinks? #f))
   (with-list-builder
    (collect!)
    (walk-filesystem-tree! path
@@ -592,12 +607,12 @@
       follow-symlinks?: (follow-symlinks? #f))
   (visit path)
   (when (and (ignore-errors (path-is-directory? path follow-symlinks?))
-	     (recurse? path))
+	         (recurse? path))
     (for-each!
      (directory-files path)
      (λ (name) (walk-filesystem-tree!
-		(path-expand name path) visit
-		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
+		        (path-expand name path) visit
+		        recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
 
 (defalias λ lambda)
 
