@@ -406,7 +406,7 @@
         (let (count 0)
           (for (col row)
             (display
-             (format "|~a "
+             (format "| ~a"
                      (format-string-size
                       col
                       (hash-ref sizes (nth count header)))))
