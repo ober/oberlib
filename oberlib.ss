@@ -34,7 +34,6 @@
   :std/text/utf8
   :std/text/yaml
   :std/text/zlib
-  :colorstring/colorstring
   :std/xml/ssax)
 
 (export #t)
@@ -437,8 +436,6 @@
 (def (org-mode-print-row data)
   (when (list? data)
     (for (datum data)
-      (color-reset #f)
-      (color (printf "|[blue]~a " datum)))
     (displayln "|")))
 
 (def (date->custom dt)
