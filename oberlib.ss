@@ -13,7 +13,6 @@
   :scheme/base
   :std/debug/heap
   :std/iter
-  :std/db/leveldb
   :std/error
   :std/format
   :std/generic
