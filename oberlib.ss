@@ -666,3 +666,151 @@
   (if bool
     "Yes"
     "No"))
+
+;; leveldb stuff
+(def (compact)
+  "Compact some stuff"
+  (let* ((itor (leveldb-iterator db))
+         (first (get-first-key))
+         (last (get-last-key)))
+    (displayln "First: " first " Last: " last)
+    (leveldb-compact-range db first last)))
+
+(def (repairdb)
+  "Repair the db"
+  (let ((db-dir (format "~a/kunabi-db/" (user-info-home (user-info (user-name))))))
+    (leveldb-repair-db (format "~a/records" db-dir))))
+
+(def (countdb)
+  "Get a count of how many records are in db"
+  (let ((itor (leveldb-iterator db)))
+    (leveldb-iterator-seek-first itor)
+    (let lp ((count 1))
+      (leveldb-iterator-next itor)
+      (if (leveldb-iterator-valid? itor)
+        (lp (1+ count))
+        count))))
+
+(def (get-leveldb key)
+  (try
+   (let* ((bytes (leveldb-get db (format "~a" key)))
+          (val (if (u8vector? bytes)
+                 (u8vector->object bytes)
+                 nil)))
+     val)
+   (catch (e)
+     (raise e))))
+
+(def (db-get key)
+  (dp (format "db-get: ~a" key))
+  (let ((ret (leveldb-get db (format "~a" key))))
+    (if (u8vector? ret)
+      (u8vector->object ret)
+      "N/A")))
+
+(def (db-open)
+  (dp ">-- db-open")
+  (let ((db-dir (or (getenv "kunabidb" #f) (format "~a/kunabi-db/" (user-info-home (user-info (user-name)))))))
+    (dp (format "db-dir is ~a" db-dir))
+    (unless (file-exists? db-dir)
+      (create-directory* db-dir))
+    (let ((location (format "~a/records" db-dir)))
+      (leveldb-open location (leveldb-options
+                              paranoid-checks: #t
+                              max-open-files: (def-num (getenv "k_max_files" #f))
+                              bloom-filter-bits: (def-num (getenv "k_bloom_bits" #f))
+                              compression: #t
+                              block-size: (def-num (getenv "k_block_size" #f))
+                              write-buffer-size: (def-num (getenv "k_write_buffer" (* 1024 1024 16)))
+                              lru-cache-capacity: (def-num (getenv "k_lru_cache" 10000)))))))
+
+(def (db-batch key value)
+  (unless (string? key) (dp (format "key: ~a val: ~a" (type-of key) (type-of value))))
+  (leveldb-writebatch-put wb key (object->u8vector value)))
+
+(def (db-put key value)
+  (dp (format "<----> db-put: key: ~a val: ~a" key value))
+  (leveldb-put db key (object->u8vector value)))
+
+(def (ensure-db)
+  (unless db
+    (set! db (db-open))))
+
+
+(def (def-num num)
+  (if (string? num)
+    (string->number num)
+    num))
+
+
+(def (db-key? key)
+  (dp (format ">-- db-key? with ~a" key))
+  (leveldb-key? db (format "~a" key)))
+
+(def (db-write)
+  (dp "in db-write")
+  (leveldb-write db wb))
+
+(def (db-close)
+  (dp "in db-close")
+  (leveldb-close db))
+
+(def (db-init)
+  (dp "in db-init")
+  (leveldb-writebatch))
+
+;; leveldb stuff
+
+(def (remove-leveldb key)
+  (dp (format "remove-leveldb: ~a" key)))
+
+(def (get-by-key key)
+  (let ((itor (leveldb-iterator db)))
+    (leveldb-iterator-seek itor (format "~a" key))
+    (let lp ((res '()))
+      (if (leveldb-iterator-valid? itor)
+        (if (pregexp-match key (bytes->string (leveldb-iterator-key itor)))
+          (begin
+            (set! res (cons (u8vector->object (leveldb-iterator-value itor)) res))
+            (leveldb-iterator-next itor)
+            (lp res))
+          res)
+        res))))
+
+(def (match-key key)
+  (resolve-records (get-by-key key)))
+
+(def (count-key key)
+  "Get a count of how many records are in db"
+  (let ((itor (leveldb-iterator db)))
+    (leveldb-iterator-seek-first itor)
+    (let lp ((count 0))
+      (leveldb-iterator-next itor)
+      (if (leveldb-iterator-valid? itor)
+        (begin
+          (if (pregexp-match key (bytes->string (leveldb-iterator-key itor)))
+            (begin
+              (displayln (format "Found one ~a" (bytes->string (leveldb-iterator-key itor))))
+              (lp (1+ count)))
+            (lp count)))
+        count))))
+
+(def (get-last-key)
+  "Get the last key for use in compaction"
+  (let ((itor (leveldb-iterator db)))
+    (leveldb-iterator-seek-last itor)
+    (let lp ()
+      (leveldb-iterator-prev itor)
+      (if (leveldb-iterator-valid? itor)
+        (bytes->string (leveldb-iterator-key itor))
+        (lp)))))
+
+(def (get-first-key)
+  "Get the last key for use in compaction"
+  (let ((itor (leveldb-iterator db)))
+    (leveldb-iterator-seek-first itor)
+    (let lp ()
+      (leveldb-iterator-next itor)
+      (if (leveldb-iterator-valid? itor)
+        (bytes->string (leveldb-iterator-key itor))
+        (lp)))))
