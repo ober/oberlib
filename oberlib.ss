@@ -630,16 +630,16 @@
    (catch (e)
      (display-exception e))))
 
-(def (modified-since? file secs-ago)
-  "Check file mtime and determine if file is older than secs-ago"
-  (if (file-exists? file)
-    (let* ((now (float->int (time->seconds (builtin-current-time))))
-           (mtime (time->seconds (file-info-last-modification-time (file-info file))))
-           (diff (- now mtime)))
-      (if (< diff secs-ago)
-        #t
-        #f))
-    #f))
+;; (def (modified-since? file secs-ago)
+;;   "Check file mtime and determine if file is older than secs-ago"
+;;   (if (file-exists? file)
+;;     (let* ((now (float->int (time->seconds (builtin-current-time))))
+;;            (mtime (time->seconds (file-info-last-modification-time (file-info file))))
+;;            (diff (- now mtime)))
+;;       (if (< diff secs-ago)
+;;         #t
+;;         #f))
+;;     #f))
 
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
