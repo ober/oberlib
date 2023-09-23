@@ -1,1 +1,3 @@
-(package: ober depend: )
+(package: ober depend:
+	  ("github.com/might-gerbils/gerbil-libyaml")
+	  )
