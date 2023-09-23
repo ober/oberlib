@@ -589,25 +589,25 @@
 (def (path-is-directory? path (follow-symlinks? #f))
   (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
 
-(def (cache-or-run cache-file expiration process)
-  "Given a procedure, check to see if cache exists within expiration time
-   Return cached info if under expiration time.
-   Otherwise, execute thunk/process and write to cache file.
-   Returning data"
-  (dp (present-item cache-file))
-  (let* ((results #f)
-         (cfe (file-exists? cache-file))
-         (ms (when cfe (modified-since? cache-file expiration))))
-    (if (and cfe
-             ms)
-      (begin
-        (dp "cache-or-run: cache hit!")
-        (set! results (read-obj-from-file cache-file)))
-      (begin
-        (dp "cache-or-run: cache miss :[")
-        (set! results (eval process))
-        (write-obj-to-file cache-file results)))
-    results))
+;; (def (cache-or-run cache-file expiration process)
+;;   "Given a procedure, check to see if cache exists within expiration time
+;;    Return cached info if under expiration time.
+;;    Otherwise, execute thunk/process and write to cache file.
+;;    Returning data"
+;;   (dp (present-item cache-file))
+;;   (let* ((results #f)
+;;          (cfe (file-exists? cache-file))
+;;          (ms (when cfe (modified-since? cache-file expiration))))
+;;     (if (and cfe
+;;              ms)
+;;       (begin
+;;         (dp "cache-or-run: cache hit!")
+;;         (set! results (read-obj-from-file cache-file)))
+;;       (begin
+;;         (dp "cache-or-run: cache miss :[")
+;;         (set! results (eval process))
+;;         (write-obj-to-file cache-file results)))
+;;     results))
 
 (def (write-obj-to-file out-file obj)
   "Serialize object to a file"
