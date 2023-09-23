@@ -32,8 +32,8 @@
 
 (export #t)
 
-(import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
-(import (rename-in :gerbil/gambit/os (time mytime)))
+;;(import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
+;;(import (rename-in :gerbil/gambit/os (time mytime)))
 (declare (not optimize-dead-definitions))
 
 (def JSON (getenv "JSON" #f))
