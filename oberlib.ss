@@ -32,8 +32,8 @@
 
 (export #t)
 
-;;(import (rename-in :gerbil/gambit/os (current-time builtin-current-time)))
-;;(import (rename-in :gerbil/gambit/os (time mytime)))
+(import (rename-in :gerbil/gambit (current-time builtin-current-time)))
+(import (rename-in :gerbil/gambit (time mytime)))
 (declare (not optimize-dead-definitions))
 
 (def JSON (getenv "JSON" #f))
@@ -545,9 +545,9 @@
     (displayln "present-item: unknown:" item))))
 
 (def (find-files path
-		         (pred? true)
-		         recurse?: (recurse? true)
-		         follow-symlinks?: (follow-symlinks? #f))
+		 (pred? true)
+		 recurse?: (recurse? true)
+		 follow-symlinks?: (follow-symlinks? #f))
   (with-list-builder
    (collect!)
    (walk-filesystem-tree! path
@@ -562,12 +562,12 @@
       follow-symlinks?: (follow-symlinks? #f))
   (visit path)
   (when (and (ignore-errors (path-is-directory? path follow-symlinks?))
-	         (recurse? path))
+	     (recurse? path))
     (for-each!
      (directory-files path)
      (λ (name) (walk-filesystem-tree!
-		        (path-expand name path) visit
-		        recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
+		(path-expand name path) visit
+		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
 
 (defalias λ lambda)
 
@@ -589,25 +589,25 @@
 (def (path-is-directory? path (follow-symlinks? #f))
   (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
 
-;; (def (cache-or-run cache-file expiration process)
-;;   "Given a procedure, check to see if cache exists within expiration time
-;;    Return cached info if under expiration time.
-;;    Otherwise, execute thunk/process and write to cache file.
-;;    Returning data"
-;;   (dp (present-item cache-file))
-;;   (let* ((results #f)
-;;          (cfe (file-exists? cache-file))
-;;          (ms (when cfe (modified-since? cache-file expiration))))
-;;     (if (and cfe
-;;              ms)
-;;       (begin
-;;         (dp "cache-or-run: cache hit!")
-;;         (set! results (read-obj-from-file cache-file)))
-;;       (begin
-;;         (dp "cache-or-run: cache miss :[")
-;;         (set! results (eval process))
-;;         (write-obj-to-file cache-file results)))
-;;     results))
+(def (cache-or-run cache-file expiration process)
+  "Given a procedure, check to see if cache exists within expiration time
+   Return cached info if under expiration time.
+   Otherwise, execute thunk/process and write to cache file.
+   Returning data"
+  (dp (present-item cache-file))
+  (let* ((results #f)
+         (cfe (file-exists? cache-file))
+         (ms (when cfe (modified-since? cache-file expiration))))
+    (if (and cfe
+             ms)
+      (begin
+        (dp "cache-or-run: cache hit!")
+        (set! results (read-obj-from-file cache-file)))
+      (begin
+        (dp "cache-or-run: cache miss :[")
+        (set! results (eval process))
+        (write-obj-to-file cache-file results)))
+    results))
 
 (def (write-obj-to-file out-file obj)
   "Serialize object to a file"
