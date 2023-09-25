@@ -610,14 +610,14 @@
 (def (write-obj-to-file out-file obj)
   "Serialize object to a file"
   (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
-    (lambda ()
-      (write-string (base64-encode (object->u8vector obj))))))
+    (lambda (out)
+      (write-string (base64-encode (object->u8vector obj)) out))))
 
 (def (write-string-to-file out-file str)
   "Write the contents of str to out-file"
   (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
-    (lambda ()
-      (write-string str))))
+    (lambda (out)
+      (write-string str out))))
 
 (def (read-obj-from-file in-file)
   "Serialize object to a file"
