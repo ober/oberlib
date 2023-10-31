@@ -55,8 +55,9 @@
     (format "~a~a " string (make-string delta #\space))))
 
 (def (dp msg)
-  (when DEBUG
-    (displayln msg)))
+;;  (when DEBUG
+     (displayln msg))
+;;)
 
 (def DEBUG (getenv "DEBUG" #f))
 
