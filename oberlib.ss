@@ -187,6 +187,7 @@
 (def (rest-call type uri headers (data #f) (retry 0))
   "Wrapper for all http queries that should return json on success.
    We return a list of OK?: #t/#f and results: object"
+  (dp (format "rest-call: type: ~a uri: ~a headers: ~a data: ~a retry: ~a" type uri headers data retry))
   (let lp ((count 0))
     (if (getenv "use_curl" #f)
       (print-curl type uri headers data)
@@ -223,7 +224,6 @@
              (displayln "retry #" count)
              (lp (+ 1 count)))
            (error (format "Out of retries. Count: ~a error: ~a" count  e))))))))
-
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
