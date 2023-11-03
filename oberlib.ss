@@ -32,8 +32,6 @@
 
 (export #t)
 
-;;(declare (not optimize-dead-definitions))
-
 (def JSON (getenv "JSON" #f))
 (setenv "GAMBOPT" "-:tE8,f8,-8,h2097152")
 
