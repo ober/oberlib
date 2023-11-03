@@ -52,11 +52,12 @@
                   0)))
     (format "~a~a " string (make-string delta #\space))))
 
+
+(def DEBUG (getenv "DEBUG" #f))
+
 (def (dp msg)
   (when DEBUG
      (displayln msg)))
-
-(def DEBUG (getenv "DEBUG" #f))
 
 (def (nth n l)
   (if (or (> n (length l)) (< n 0))
