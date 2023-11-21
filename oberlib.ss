@@ -635,6 +635,9 @@
         #f))
     #f))
 
+(defrules ignore-errors ()
+  ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
+
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
   (unless (table? hsh)
