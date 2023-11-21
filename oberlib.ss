@@ -568,9 +568,6 @@
 
 (defalias λ lambda)
 
-(defrules ignore-errors ()
-  ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
-
 (def (subpath top . sub-components)
   (path-expand (string-join sub-components "/") top))
 
