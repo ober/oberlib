@@ -21,6 +21,7 @@
   :std/srfi/1
   :std/srfi/13
   :std/srfi/19
+
   :std/srfi/95
   :std/sugar
   :std/text/base64
@@ -91,7 +92,7 @@
 (def (date->epoch mydate)
   (string->number (date->string (string->date mydate "~Y-~m-~d ~H:~M:~S") "~s")))
 
-(def (date->epoch2 mydate)
+(def (date->epochguwe2 mydate)
   (string->number (date->string (string->date mydate "~Y-~m-~dT~H:~M:~SZ") "~s")))
 
 (def (strip-quotes str)
@@ -140,7 +141,7 @@
 (def (print-curl type uri headers data)
   "Print out curl equivalent, or exec it"
   (let ((curl (format-curl-cmd type uri headers data)))
-    (if (getenv "debug" #f)
+    (if (getenv "print_curl" #f)
       (displayln curl)
       (try
        (let ((res (shell-command curl #t)))
