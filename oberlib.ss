@@ -21,7 +21,6 @@
   :std/srfi/1
   :std/srfi/13
   :std/srfi/19
-
   :std/srfi/95
   :std/sugar
   :std/text/base64
@@ -205,8 +204,8 @@
                (headers (request-headers reply))
                (text (request-text reply)))
            (when JSON
-             (displayln text)
-             (exit 0))
+             (displayln text))
+           ;;(exit 0))
            (if (success? status)
              [ #t (from-json text) ]
              [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
