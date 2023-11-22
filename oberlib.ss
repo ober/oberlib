@@ -91,7 +91,7 @@
 (def (date->epoch mydate)
   (string->number (date->string (string->date mydate "~Y-~m-~d ~H:~M:~S") "~s")))
 
-(def (date->epochguwe2 mydate)
+(def (date->epoch2 mydate)
   (string->number (date->string (string->date mydate "~Y-~m-~dT~H:~M:~SZ") "~s")))
 
 (def (strip-quotes str)
