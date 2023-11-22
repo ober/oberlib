@@ -140,17 +140,17 @@
 (def (print-curl type uri headers data)
   "Print out curl equivalent, or exec it"
   (let ((curl (format-curl-cmd type uri headers data)))
-    (if (getenv "print_curl" #f)
-      (displayln curl)
-      (try
-       (let ((res (shell-command curl #t)))
-         (let ((ec (car res))
-               (txt (cdr res)))
-           (if (= ec 0)
-             [ #t (if (string? txt) (from-json txt) txt) ]
-             [ #f txt ])))
-       (catch (e)
-         (display-exception e))))))
+    (when (getenv "print_curl" #f)
+      (displayln curl))
+    (try
+     (let ((res (shell-command curl #t)))
+       (let ((ec (car res))
+             (txt (cdr res)))
+         (if (= ec 0)
+           [ #t (if (string? txt) (from-json txt) txt) ]
+           [ #f txt ])))
+     (catch (e)
+       (display-exception e)))))
 
 (def (format-curl-cmd type uri headers data)
   (let ((heads (format-curl-headers headers))
