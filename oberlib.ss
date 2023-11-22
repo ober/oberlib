@@ -346,6 +346,8 @@
             (reverse ix-prs)))))))
 
 (def (style-output infos (style "org-mode"))
+  (when JSON
+    (exit 0))
   (when (list? infos)
     (let* ((sizes (hash))
            (data (reverse infos))
