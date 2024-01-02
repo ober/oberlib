@@ -560,7 +560,7 @@
       recurse?: (recurse? true)
       follow-symlinks?: (follow-symlinks? #f))
   (visit path)
-  (when (and (ignore-errors (path-is-directory? path follow-symlinks?))
+  (when (and (my-ignore-errors (path-is-directory? path follow-symlinks?))
 	     (recurse? path))
     (for-each!
      (directory-files path)
@@ -637,7 +637,7 @@
         #f))
     #f))
 
-(defrules ignore-errors ()
+(defrules my-ignore-errors ()
   ((_ form ...) (with-catch (λ (_) #f) (λ () form ...))))
 
 (def (rekey-sym hsh)
