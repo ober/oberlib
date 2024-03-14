@@ -28,7 +28,7 @@
   :std/text/utf8
   :clan/text/yaml
   :std/text/zlib
-  :std/xml/ssax)
+  )
 
 (export #t)
 
