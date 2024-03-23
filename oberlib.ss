@@ -439,7 +439,7 @@
 
 (def (resolve-ipv4 host)
   (let* ((host-info (host-info-addresses (host-info host))))
-    (dp (format "host-info: ~a type:~a" host-info (type-of host-info)))
+    (dp (format "host-info: ~a type:~a" host-info (##type-id host-info)))
     (ip4-address->string
      (car host-info))))
 
@@ -643,7 +643,7 @@
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
   (unless (table? hsh)
-    (error "hsh is not table." (type-of hsh)))
+    (error "hsh is not table." (##type-id hsh)))
   (let (sym-hsh (hash))
     (hash-for-each
      (lambda (k v)
