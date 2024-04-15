@@ -28,7 +28,7 @@
   :std/text/utf8
   :clan/text/yaml
   :std/text/zlib
-  :std/io/bio/api
+  :std/io
   )
 
 (export #t)
