@@ -29,7 +29,7 @@
   :clan/text/yaml
   :std/text/zlib
   :std/io
-  :std/actor-v18/io
+  :std/actor-v18
   )
 
 (export #t)
