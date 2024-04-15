@@ -116,7 +116,7 @@
 
 (def (hash->string h)
   (let ((results []))
-    (if (table? h)
+    (if (hash-table? h)
       (begin
         (hash-for-each
          (lambda (k v)
@@ -295,7 +295,7 @@
   ;;(displayln "re: " re " delim: " delim " str: " str " fmt: " fmt)
   (unless (and
             (string? str)
-            (table? hsh)
+            (hash-table? hsh)
             re)
     str)
   (let* ((regy (pregexp re))
@@ -528,7 +528,7 @@
 (def (present-item item)
   "Given a random object, print it out to the stdout"
   (cond
-   ((table? item)
+   ((hash-table? item)
     (displayln (hash->string item)))
    ((or (string? item) (list? item) (number? item))
     (displayln item))
@@ -642,7 +642,7 @@
 
 (def (rekey-sym hsh)
   "Convert all keys from strings to symbols, nondestructively"
-  (unless (table? hsh)
+  (unless (hash-table? hsh)
     (error "hsh is not table." (##type-id hsh)))
   (let (sym-hsh (hash))
     (hash-for-each
@@ -662,3 +662,12 @@
   (if bool
     "Yes"
     "No"))
+
+(def (marshal-value value)
+  (let* ((buf (open-buffered-writer #f))
+         (w (BufferedWriter-marshal buf value)))
+    (get-buffer-output-u8vector buf)))
+
+(def (unmarshal-value pickle)
+  (let ((buf (open-buffered-reader pickle)))
+    (BufferedReader-unmarshal buf)))
