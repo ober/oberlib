@@ -665,9 +665,8 @@
     "Yes"
     "No"))
 
-(def (marshal-value value buf)
-  (let* (
-         ;;(buf (open-buffered-writer #f))
+(def (marshal-value value)
+  (let* ((buf (open-buffered-writer #f))
          (w (BufferedWriter-marshal buf value)))
     (get-buffer-output-u8vector buf)))
 
