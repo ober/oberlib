@@ -58,7 +58,7 @@
 
 (def (dp msg)
   (when DEBUG
-     (displayln msg)))
+    (displayln msg)))
 
 (def (nth n l)
   (if (or (> n (length l)) (< n 0))
@@ -75,10 +75,11 @@
   (date->string date "~c"))
 
 (def (from-json json)
-  (try
-   (with-input-from-string json read-json)
-   (catch (e)
-     (display-exception e))))
+  (parameterize ((read-json-key-as-symbol? #t))
+    (try
+     (with-input-from-string json read-json)
+     (catch (e)
+       (display-exception e)))))
 
 (def (epoch->date epoch)
   (cond
@@ -545,9 +546,9 @@
     (displayln "present-item: unknown:" item))))
 
 (def (find-files path
-		 (pred? true)
-		 recurse?: (recurse? true)
-		 follow-symlinks?: (follow-symlinks? #f))
+		         (pred? true)
+		         recurse?: (recurse? true)
+		         follow-symlinks?: (follow-symlinks? #f))
   (with-list-builder
    (collect!)
    (walk-filesystem-tree! path
@@ -562,12 +563,12 @@
       follow-symlinks?: (follow-symlinks? #f))
   (visit path)
   (when (and (my-ignore-errors (path-is-directory? path follow-symlinks?))
-	     (recurse? path))
+	         (recurse? path))
     (for-each!
      (directory-files path)
      (λ (name) (walk-filesystem-tree!
-		(path-expand name path) visit
-		recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
+		        (path-expand name path) visit
+		        recurse?: recurse? follow-symlinks?: follow-symlinks?)))))
 
 (defalias λ lambda)
 
@@ -674,6 +675,6 @@
     (BufferedReader-unmarshal buf)))
 
 (def (my-json-object->string obj)
-     "Handle the change to master of using strings as default keys"
-     (parameterize ((read-json-key-as-symbol? #t))
-       (json-object->string obj)))
+  "Handle the change to master of using strings as default keys"
+  (parameterize ((read-json-key-as-symbol? #t))
+    (json-object->string obj)))
