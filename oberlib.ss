@@ -673,7 +673,7 @@
   (let ((buf (open-buffered-reader pickle)))
     (BufferedReader-unmarshal buf)))
 
-(def (my-json-obj->string obj)
+(def (my-json-object->string obj)
      "Handle the change to master of using strings as default keys"
      (parameterize ((read-json-key-as-symbol? #t))
        (json-object->string obj)))
