@@ -35,7 +35,6 @@
 (export #t)
 
 (def JSON (getenv "JSON" #f))
-(setenv "GAMBOPT" "-:tE8,f8,-8,h2097152")
 
 (def (strip-both string)
   "Safely strip leading, and trailing whitespace"
