@@ -23,7 +23,7 @@
   :std/srfi/19
   :std/srfi/95
   :std/sugar
-  :std/sort
+  (only-in :std/sort sorted-lst)
   :std/text/base64
   :std/text/json
   :std/text/utf8
