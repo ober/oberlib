@@ -379,7 +379,6 @@
        ((string=? style "confluence-markdown")
         (set! header-sep "||")))
 
-
       (for (head header)
         (display
          (format "~a~a" header-sep
@@ -402,7 +401,7 @@
           (set! count (1+ count))))
       (displayln "|")
 
-      (for (row (sort rows <))
+      (for (row (sort rows compare-lst-car))
         (let (count 0)
           (for (col row)
             (display
@@ -413,6 +412,10 @@
             (set! count (1+ count))))
         (displayln "|"))
       )))
+
+
+(def (compare-lst-car a b)
+  (< (car a) (car b)))
 
 (def (print-header style header)
   (cond
