@@ -23,7 +23,6 @@
   :std/srfi/19
   :std/srfi/95
   :std/sugar
-  (only-in :std/sort sorted-lst)
   :std/text/base64
   :std/text/json
   :std/text/utf8
@@ -403,7 +402,7 @@
           (set! count (1+ count))))
       (displayln "|")
 
-      (for (row (sorted-lst rows))
+      (for (row (sort! rows <))
         (let (count 0)
           (for (col row)
             (display
