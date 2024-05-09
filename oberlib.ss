@@ -402,7 +402,7 @@
           (set! count (1+ count))))
       (displayln "|")
 
-      (for (row (sort! rows <))
+      (for (row (sort rows <))
         (let (count 0)
           (for (col row)
             (display
