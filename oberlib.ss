@@ -354,7 +354,9 @@
            (data (reverse infos))
            (header (car data))
            (rows (cdr data))
+           (sorted #f)
            (header-sep "|"))
+
       (for (head header)
         (unless (string? head)
           (displayln "head is not string: " head)
@@ -372,9 +374,11 @@
 
       (cond
        ((string=? style "org-mode")
-        (set! header-sep "| "))
+        (set! header-sep "| ")
+        (set! sorted #t))
        ((string=? style "confluence-markdown")
         (set! header-sep "||")))
+
 
       (for (head header)
         (display
@@ -398,7 +402,7 @@
           (set! count (1+ count))))
       (displayln "|")
 
-      (for (row rows)
+      (for (row (sorted-lst rows))
         (let (count 0)
           (for (col row)
             (display
