@@ -415,7 +415,7 @@
 
 
 (def (compare-lst-car a b)
-  (< (car a) (car b)))
+  (string=? (car a) (car b)))
 
 (def (print-header style header)
   (cond
