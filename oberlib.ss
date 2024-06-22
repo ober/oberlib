@@ -28,9 +28,7 @@
   :std/text/utf8
   :clan/text/yaml
   :std/text/zlib
-  :std/io
-  :std/actor-v18/io
-  )
+  :std/markup/sxml)
 
 (export #t)
 
