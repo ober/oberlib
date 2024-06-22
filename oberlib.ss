@@ -669,7 +669,6 @@
     "Yes"
     "No"))
 
-<<<<<<< HEAD
 (def (marshal-value value)
   (let* ((buf (open-buffered-writer #f))
          (w (BufferedWriter-marshal buf value)))
