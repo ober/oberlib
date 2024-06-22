@@ -669,6 +669,7 @@
     "Yes"
     "No"))
 
+<<<<<<< HEAD
 (def (marshal-value value)
   (let* ((buf (open-buffered-writer #f))
          (w (BufferedWriter-marshal buf value)))
@@ -682,3 +683,14 @@
   "Handle the change to master of using strings as default keys"
   (parameterize ((read-json-key-as-symbol? #t))
     (json-object->string obj)))
+
+(def (mixed-string-join lst sep)
+  (string-join
+   (map
+     (lambda (x)
+       (cond
+        ((number? x) (number->string x))
+        ((symbol? x) (symbol->string x))
+        (else x)))
+     lst)
+   sep))
