@@ -3,14 +3,18 @@
 ;;; my utils
 
 (import
+  :clan/text/yaml
   :gerbil/gambit
   :scheme/base
+  :std/actor-v18/io
   :std/debug/heap
-  :std/iter
   :std/error
   :std/format
   :std/generic
   :std/generic/dispatch
+  :std/io
+  :std/iter
+  :std/markup/sxml
   :std/misc/channel
   :std/misc/list
   :std/misc/ports
@@ -26,11 +30,7 @@
   :std/text/base64
   :std/text/json
   :std/text/utf8
-  :clan/text/yaml
   :std/text/zlib
-  :std/markup/sxml
-  :std/io
-  :std/actor-v18/io
   )
 
 (export #t)
