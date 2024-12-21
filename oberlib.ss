@@ -696,3 +696,8 @@
         (else x)))
      lst)
    sep))
+
+(def (def-num num)
+  (if (string? num)
+    (string->number num)
+    num))
