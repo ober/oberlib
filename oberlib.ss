@@ -702,10 +702,6 @@
     (string->number num)
     num))
 
-(import :std/json
-        :std/text/json
-        :std/net/http-client)
-
 (def (generate-http-functions openapi-json)
   (let* ((spec (json->object openapi-json))
          (paths (hash-ref spec "paths")))
