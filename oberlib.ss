@@ -702,44 +702,44 @@
     (string->number num)
     num))
 
-(def (generate-http-functions openapi-json)
-  (let* ((spec (json->object openapi-json))
-         (paths (hash-ref spec "paths")))
-    (for-each (lambda (path-entry)
-                (let* ((path (car path-entry))
-                       (ops (cdr path-entry))
-                       (ops-list (hash->list ops)))
-                  (for-each (lambda (op)
-                              (let* ((method (string->symbol (car op)))
-                                     (op-spec (cdr op))
-                                     (summary (hash-ref op-spec "summary"))
-                                     (parameters (hash-ref op-spec "parameters"))
-                                     (request-body (hash-ref op-spec "requestBody"))
-                                     (responses (hash-ref op-spec "responses")))
-                                (printf "~a ~a~%" method summary)
-                                (printf "(define (~a url~@
-                                                  ~a~@
-                                                  ~a)~%"
-                                        (string->symbol
-                                         (string-append
-                                          (symbol->string method)
-                                          "-"
-                                          (string-replace path "/" "-")))
-                                        (if (null? parameters)
-                                          ""
-                                          "#!optional")
-                                        (if (null? request-body)
-                                          ""
-                                          "#!optional (body #f)"))
-                                (printf "  (http-~a url~%" (symbol->string method))
-                                (when (not (null? parameters))
-                                  (printf "   (params~%")
-                                  (for-each (lambda (param)
-                                              (printf "     ~s~%" (hash-ref param "name")))
-                                            parameters)
-                                  (printf "   )"))
-                                (when (not (null? request-body))
-                                  (printf "   (body: body)"))
-                                (printf "))~%~%")))
-                            ops-list)))
-              (hash->list paths))))
+;; (def (generate-http-functions openapi-json)
+;;   (let* ((spec (json->object openapi-json))
+;;          (paths (hash-ref spec "paths")))
+;;     (for-each (lambda (path-entry)
+;;                 (let* ((path (car path-entry))
+;;                        (ops (cdr path-entry))
+;;                        (ops-list (hash->list ops)))
+;;                   (for-each (lambda (op)
+;;                               (let* ((method (string->symbol (car op)))
+;;                                      (op-spec (cdr op))
+;;                                      (summary (hash-ref op-spec "summary"))
+;;                                      (parameters (hash-ref op-spec "parameters"))
+;;                                      (request-body (hash-ref op-spec "requestBody"))
+;;                                      (responses (hash-ref op-spec "responses")))
+;;                                 (printf "~a ~a~%" method summary)
+;;                                 (printf "(define (~a url~@
+;;                                                   ~a~@
+;;                                                   ~a)~%"
+;;                                         (string->symbol
+;;                                          (string-append
+;;                                           (symbol->string method)
+;;                                           "-"
+;;                                           (string-replace path "/" "-")))
+;;                                         (if (null? parameters)
+;;                                           ""
+;;                                           "#!optional")
+;;                                         (if (null? request-body)
+;;                                           ""
+;;                                           "#!optional (body #f)"))
+;;                                 (printf "  (http-~a url~%" (symbol->string method))
+;;                                 (when (not (null? parameters))
+;;                                   (printf "   (params~%")
+;;                                   (for-each (lambda (param)
+;;                                               (printf "     ~s~%" (hash-ref param "name")))
+;;                                             parameters)
+;;                                   (printf "   )"))
+;;                                 (when (not (null? request-body))
+;;                                   (printf "   (body: body)"))
+;;                                 (printf "))~%~%")))
+;;                             ops-list)))
+;;               (hash->list paths))))
