@@ -7,6 +7,7 @@
   :gerbil/gambit
   :scheme/base
   :std/actor-v18/io
+  :std/crypto/etc
   :std/debug/heap
   :std/error
   :std/format
@@ -21,6 +22,7 @@
   :std/net/address
   :std/net/request
   :std/net/uri
+  :std/os/temporaries
   :std/pregexp
   :std/srfi/1
   :std/srfi/13
@@ -156,7 +158,8 @@
 
 (def (format-curl-cmd type uri headers data)
   (let ((heads (format-curl-headers headers))
-        (tf (format "/tmp/confluence-~a" (random-integer 10000))))
+        ;; Use cryptographically secure random bytes for temp file name
+        (tf (make-temporary-file-name "oberlib-curl-")))
     (cond
      ((equal? type 'get)
       (if data
@@ -594,11 +597,12 @@
 (def (path-is-directory? path (follow-symlinks? #f))
   (equal? 'directory (file-info-type (file-info path follow-symlinks?))))
 
-(def (cache-or-run cache-file expiration process)
-  "Given a procedure, check to see if cache exists within expiration time
+(def (cache-or-run cache-file expiration thunk)
+  "Given a thunk (zero-argument procedure), check to see if cache exists within expiration time
    Return cached info if under expiration time.
-   Otherwise, execute thunk/process and write to cache file.
-   Returning data"
+   Otherwise, execute thunk and write to cache file.
+   Returning data.
+   Note: thunk should be a procedure, not an expression to eval."
   (dp (present-item cache-file))
   (let* ((results #f)
          (cfe (file-exists? cache-file))
@@ -610,12 +614,15 @@
         (set! results (read-obj-from-file cache-file)))
       (begin
         (dp "cache-or-run: cache miss :[")
-        (set! results (eval process))
+        ;; Call the thunk directly instead of using eval
+        (set! results (thunk))
         (write-obj-to-file cache-file results)))
     results))
 
 (def (write-obj-to-file out-file obj)
-  "Serialize object to a file"
+  "Serialize object to a file using Gambit's object serialization.
+   WARNING: Do NOT use this for untrusted data - u8vector->object can execute
+   arbitrary code during deserialization. Use write-json-to-file for untrusted data."
   (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
     (lambda (out)
       (write-string (base64-encode (object->u8vector obj)) out))))
@@ -626,14 +633,31 @@
     (lambda (out)
       (write-string str out))))
 
+(def (write-json-to-file out-file obj)
+  "Serialize object to a file as JSON. Safe for untrusted data."
+  (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
+    (lambda (out)
+      (write-string (json-object->string obj) out))))
+
 (def (read-obj-from-file in-file)
-  "Serialize object to a file"
+  "Deserialize object from a file using Gambit's object serialization.
+   WARNING: Do NOT use this for untrusted data - u8vector->object can execute
+   arbitrary code during deserialization. Use read-json-from-file for untrusted data."
   (try
    (u8vector->object
     (base64-decode
      (read-file-string in-file)))
    (catch (e)
      (display-exception e))))
+
+(def (read-json-from-file in-file)
+  "Deserialize JSON object from a file. Safe for untrusted data."
+  (try
+   (parameterize ((read-json-key-as-symbol? #t))
+     (with-input-from-string (read-file-string in-file) read-json))
+   (catch (e)
+     (display-exception e)
+     #f)))
 
 (def (modified-since? file secs-ago)
   "Check file mtime and determine if file is older than secs-ago"
