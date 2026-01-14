@@ -142,19 +142,14 @@
     final))
 
 (def (print-curl type uri headers data)
-  "Print out curl equivalent, or exec it"
+  "Print curl equivalent for debugging. Does NOT execute shell commands.
+   SECURITY: Shell command execution removed to prevent command injection.
+   Use rest-call for actual HTTP requests."
   (let ((curl (format-curl-cmd type uri headers data)))
     (when (getenv "print_curl" #f)
       (displayln curl))
-    (try
-     (let ((res (shell-command curl #t)))
-       (let ((ec (car res))
-             (txt (cdr res)))
-         (if (= ec 0)
-           [ #t (if (string? txt) (from-json txt) txt) ]
-           [ #f txt ])))
-     (catch (e)
-       (display-exception e)))))
+    ;; Return #f to indicate this is debug-only, not for execution
+    #f))
 
 (def (format-curl-cmd type uri headers data)
   (let ((heads (format-curl-headers headers))
@@ -189,44 +184,45 @@
 
 (def (rest-call type uri headers (data #f) (retry 0))
   "Wrapper for all http queries that should return json on success.
-   We return a list of OK?: #t/#f and results: object"
+   We return a list of OK?: #t/#f and results: object
+   SECURITY: Always uses native HTTP functions, never shell commands."
   (dp (format "rest-call: type: ~a uri: ~a headers: ~a data: ~a retry: ~a" type uri headers data retry))
+  ;; Print curl equivalent for debugging if requested (does not execute)
+  (when (getenv "print_curl" #f)
+    (displayln (format-curl-cmd type uri headers data)))
   (let lp ((count 0))
-    (if (getenv "use_curl" #f)
-      (print-curl type uri headers data)
-      (try
-       (let ((reply
-              (cond
-               ((equal? type 'get)
-                (rest-call-get uri headers))
-               ((equal? type 'post)
-                (rest-call-post uri headers data))
-               ((equal? type 'put)
-                (rest-call-put uri headers data))
-               ((equal? type 'delete)
-                (rest-call-delete uri headers)))))
-         (let ((status (request-status reply))
-               (headers (request-headers reply))
-               (text (request-text reply)))
-           (when JSON
-             (displayln text))
-           ;;(exit 0))
-           (if (success? status)
-             [ #t (from-json text) ]
-             [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
-       (catch (os-exception? e)
-         (when DEBUG
-           (displayln "procedure: " (os-exception-procedure e))
-           (displayln "arguments: " (os-exception-arguments e))
-           (displayln "code: " (os-exception-code e))
-           (displayln "message: " (os-exception-message e))))
-       (catch (e)
-         (displayln "count: " count " retry: " retry)
-         (if (< count retry)
-           (begin
-             (displayln "retry #" count)
-             (lp (+ 1 count)))
-           (error (format "Out of retries. Count: ~a error: ~a" count  e))))))))
+    (try
+     (let ((reply
+            (cond
+             ((equal? type 'get)
+              (rest-call-get uri headers))
+             ((equal? type 'post)
+              (rest-call-post uri headers data))
+             ((equal? type 'put)
+              (rest-call-put uri headers data))
+             ((equal? type 'delete)
+              (rest-call-delete uri headers)))))
+       (let ((status (request-status reply))
+             (headers (request-headers reply))
+             (text (request-text reply)))
+         (when JSON
+           (displayln text))
+         (if (success? status)
+           [ #t (from-json text) ]
+           [ #f (format "Error: got ~a on request. text: ~a~%" status text) ])))
+     (catch (os-exception? e)
+       (when DEBUG
+         (displayln "procedure: " (os-exception-procedure e))
+         (displayln "arguments: " (os-exception-arguments e))
+         (displayln "code: " (os-exception-code e))
+         (displayln "message: " (os-exception-message e))))
+     (catch (e)
+       (displayln "count: " count " retry: " retry)
+       (if (< count retry)
+         (begin
+           (displayln "retry #" count)
+           (lp (+ 1 count)))
+         (error (format "Out of retries. Count: ~a error: ~a" count  e)))))))
 
 (def (rest-call-get uri headers)
   (http-get uri headers: headers))
@@ -602,7 +598,10 @@
    Return cached info if under expiration time.
    Otherwise, execute thunk and write to cache file.
    Returning data.
-   Note: thunk should be a procedure, not an expression to eval."
+   Note: thunk should be a procedure, not an expression to eval.
+
+   SECURITY NOTE: Uses read-obj-from-file/write-obj-to-file which have known
+   security vulnerabilities. Consider using cache-or-run-json for new code."
   (dp (present-item cache-file))
   (let* ((results #f)
          (cfe (file-exists? cache-file))
@@ -619,10 +618,40 @@
         (write-obj-to-file cache-file results)))
     results))
 
+(def (cache-or-run-json cache-file expiration thunk)
+  "Safe JSON-based caching function (recommended over cache-or-run).
+   Given a thunk (zero-argument procedure), check if cache exists within expiration time.
+   Return cached info if under expiration time.
+   Otherwise, execute thunk and write to cache file as JSON.
+   Returning data.
+   Note: thunk should be a procedure, not an expression to eval.
+   Note: Cached data must be JSON-serializable (hash tables, lists, strings, numbers, booleans)."
+  (dp (present-item cache-file))
+  (let* ((results #f)
+         (cfe (file-exists? cache-file))
+         (ms (when cfe (modified-since? cache-file expiration))))
+    (if (and cfe ms)
+      (begin
+        (dp "cache-or-run-json: cache hit!")
+        (set! results (read-json-from-file cache-file)))
+      (begin
+        (dp "cache-or-run-json: cache miss :[")
+        (set! results (thunk))
+        (write-json-to-file cache-file results)))
+    results))
+
 (def (write-obj-to-file out-file obj)
-  "Serialize object to a file using Gambit's object serialization.
-   WARNING: Do NOT use this for untrusted data - u8vector->object can execute
-   arbitrary code during deserialization. Use write-json-to-file for untrusted data."
+  "DEPRECATED: Serialize object using Gambit's object serialization.
+
+   CRITICAL SECURITY WARNING - REMOTE CODE EXECUTION RISK:
+   The corresponding read-obj-from-file uses u8vector->object which can
+   execute ARBITRARY CODE during deserialization. If the file is tampered
+   with or comes from an untrusted source, an attacker can run any code.
+
+   DO NOT use for: files from internet, user-modifiable files, shared locations.
+   USE write-json-to-file INSTEAD for all new code.
+
+   This function is kept only for backward compatibility with existing cache files."
   (with-output-to-file [ path: out-file create: 'maybe truncate: #t ]
     (lambda (out)
       (write-string (base64-encode (object->u8vector obj)) out))))
@@ -640,15 +669,24 @@
       (write-string (json-object->string obj) out))))
 
 (def (read-obj-from-file in-file)
-  "Deserialize object from a file using Gambit's object serialization.
-   WARNING: Do NOT use this for untrusted data - u8vector->object can execute
-   arbitrary code during deserialization. Use read-json-from-file for untrusted data."
+  "DEPRECATED: Deserialize object using Gambit's object serialization.
+
+   CRITICAL SECURITY WARNING - REMOTE CODE EXECUTION RISK:
+   This function uses u8vector->object which can execute ARBITRARY CODE
+   during deserialization. If the input file has been tampered with or
+   comes from an untrusted source, an attacker can execute any code.
+
+   DO NOT use for: files from internet, user-modifiable files, shared locations.
+   USE read-json-from-file INSTEAD for all new code.
+
+   This function is kept only for backward compatibility with existing cache files."
   (try
    (u8vector->object
     (base64-decode
      (read-file-string in-file)))
    (catch (e)
-     (display-exception e))))
+     (display-exception e)
+     #f)))
 
 (def (read-json-from-file in-file)
   "Deserialize JSON object from a file. Safe for untrusted data."
