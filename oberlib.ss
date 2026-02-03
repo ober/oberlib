@@ -3,26 +3,18 @@
 ;;; my utils
 
 (import
-  :clan/text/yaml
   :gerbil/gambit
   :scheme/base
   :std/actor-v18/io
-  :std/crypto/etc
-  :std/debug/heap
   :std/error
   :std/format
-  :std/generic
-  :std/generic/dispatch
   :std/io
   :std/iter
-  :std/markup/sxml
-  :std/misc/channel
   :std/misc/list
   :std/misc/ports
   :std/net/address
   :std/net/request
   :std/net/uri
-  :std/os/temporaries
   :std/pregexp
   :std/srfi/1
   :std/srfi/13
@@ -32,10 +24,83 @@
   :std/text/base64
   :std/text/json
   :std/text/utf8
-  :std/text/zlib
   )
 
-(export #t)
+(export
+  strip-both
+  format-string-size
+  nth
+  float->int
+  print-date
+  from-json
+  epoch->date
+  date->epoch
+  date->epoch2
+  strip-quotes
+  success?
+  do-delete
+  hash->string
+  hash->str
+  format-curl-headers
+  print-curl
+  format-curl-cmd
+  do-get-generic
+  rest-call
+  rest-call-get
+  rest-call-post
+  rest-call-put
+  rest-call-delete
+  do-post
+  do-get
+  do-post-generic
+  do-put
+  remove-bad-matches
+  interpol
+  make-format-safe
+  hash-interpol
+  interpol-from-env
+  match-regexp
+  style-output
+  compare-lst-car
+  print-header
+  print-row
+  org-mode-print-row
+  date->custom
+  resolve-ipv4
+  make-basic-auth
+  any->int
+  sis
+  filter-headers
+  filter-row
+  filter-row-hash
+  web-encode
+  get-if-set-b64
+  pi
+  present-item
+  find-files
+  walk-filesystem-tree!
+  subpath
+  path-is-symlink?
+  path-is-not-symlink?
+  path-is-file?
+  path-is-directory?
+  cache-or-run
+  cache-or-run-json
+  write-obj-to-file
+  write-string-to-file
+  write-json-to-file
+  read-obj-from-file
+  read-json-from-file
+  modified-since?
+  my-ignore-errors
+  rekey-sym
+  lines-to-spaces
+  yon
+  marshal-value
+  unmarshal-value
+  my-json-object->string
+  mixed-string-join
+  def-num)
 
 (def JSON (getenv "JSON" #f))
 
@@ -63,7 +128,7 @@
     (displayln msg)))
 
 (def (nth n l)
-  (if (or (> n (length l)) (< n 0))
+  (if (or (>= n (length l)) (< n 0))
     (error "Index out of bounds.")
     (if (eq? n 0)
       (car l)
@@ -90,7 +155,9 @@
    ((flonum? epoch)
     (time-utc->date (make-time time-utc 0 (float->int epoch))))
    ((fixnum? epoch)
-    (time-utc->date (make-time time-utc 0 epoch)))))
+    (time-utc->date (make-time time-utc 0 epoch)))
+   (else
+    (error "epoch->date: unsupported type" epoch))))
 
 (def (date->epoch mydate)
   (string->number (date->string (string->date mydate "~Y-~m-~d ~H:~M:~S") "~s")))
@@ -113,10 +180,12 @@
          (status (request-status reply))
          (headers (request-headers reply))
          (text (request-text reply)))
-    (print-curl "delete" uri "" "")
+    (print-curl 'delete uri "" "")
     (if (success? status)
       text
-      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+      (begin
+        (displayln (format "Error: got ~a on request. text: ~a~%" status text))
+        #f))))
 
 (def (hash->string h)
   (let ((results []))
@@ -152,20 +221,16 @@
     #f))
 
 (def (format-curl-cmd type uri headers data)
-  (let ((heads (format-curl-headers headers))
-        ;; Use cryptographically secure random bytes for temp file name
-        (tf (make-temporary-file-name "oberlib-curl-")))
+  (let ((heads (format-curl-headers headers)))
     (cond
      ((equal? type 'get)
       (if data
-        (format "curl -sS -k -X GET ~a -d \'~a\' ~a" heads data uri)
+        (format "curl -sS -k -X GET ~a -d '~a' ~a" heads data uri)
         (format "curl -sS -k -X GET ~a ~a" heads uri)))
      ((equal? type 'put)
-      (write-string-to-file tf data)
-      (format "curl -sS -k -X PUT ~a -d@~a \'~a\'" heads tf uri))
+      (format "curl -sS -k -X PUT ~a -d '~a' '~a'" heads data uri))
      ((equal? type 'post)
-      (write-string-to-file tf data)
-      (format "curl -sS -k -X POST ~a -d@~a \'~a\'" heads tf uri))
+      (format "curl -sS -k -X POST ~a -d '~a' '~a'" heads data uri))
      ((equal? type 'delete)
       (format "curl -sS -k -X DELETE ~a ~a" heads uri))
      (else
@@ -177,10 +242,12 @@
          (status (request-status reply))
          (headers (request-headers reply))
          (text (request-text reply)))
-    (print-curl "get" uri "" "")
+    (print-curl 'get uri "" "")
     (if (success? status)
       text
-      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+      (begin
+        (displayln (format "Error: got ~a on request. text: ~a~%" status text))
+        #f))))
 
 (def (rest-call type uri headers (data #f) (retry 0))
   "Wrapper for all http queries that should return json on success.
@@ -244,9 +311,12 @@
           (text (request-text reply)))
      (if (success? status)
        text
-       (displayln (format "Failure on post. Status:~a Text:~a~%" status text))))
+       (begin
+         (displayln (format "Failure on post. Status:~a Text:~a~%" status text))
+         #f)))
    (catch (e)
-     (display-exception e))))
+     (display-exception e)
+     #f)))
 
 (def (do-get uri)
   (let* ((reply (http-get uri))
@@ -254,7 +324,9 @@
          (text (request-text reply)))
     (if (success? status)
       text
-      (displayln (format "Error: got ~a on request. text: ~a~%" status text)))))
+      (begin
+        (displayln (format "Error: got ~a on request. text: ~a~%" status text))
+        #f))))
 
 (def (do-post-generic uri headers data)
   (let* ((reply (http-post uri
@@ -262,13 +334,15 @@
                            data: data))
          (status (request-status reply))
          (text (request-text reply)))
-    (dp (print-curl "post" uri headers data))
+    (dp (print-curl 'post uri headers data))
     (if (success? status)
       text
-      (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text)))))
+      (begin
+        (displayln (format "Error: Failure on a post. got ~a text: ~a~%" status text))
+        #f))))
 
 (def (do-put uri headers data)
-  (dp (print-curl "put" uri headers data))
+  (dp (print-curl 'put uri headers data))
   (let* ((reply (http-put uri
                           headers: headers
                           data: data)))
@@ -278,7 +352,7 @@
   (let ((goodies []))
     (for (var vars)
       (unless (string-contains var omit)
-        (set! goodies (flatten (cons var goodies)))))
+        (set! goodies (cons var goodies))))
     (reverse goodies)))
 
 (def (interpol str)
@@ -286,20 +360,19 @@
 
 (def (make-format-safe str)
   "Replace all ~ to ~~ except [~ to be safe for format use"
-  (unless (string? str)
-    str)
-  (let ((regy (pregexp "(?:[^\\[])(\\~+)")))
-    (pregexp-replace* regy str " ∼")))
+  (if (not (string? str))
+    str
+    (let ((regy (pregexp "(?:[^\\[])(\\~+)")))
+      (pregexp-replace* regy str " ∼"))))
 
 (def (hash-interpol re delim str hsh fmt)
   "Given a RE, replace all instances in str with val from key matching RE"
   ;;(displayln "re: " re " delim: " delim " str: " str " fmt: " fmt)
-  (unless (and
-            (string? str)
-            (hash-table? hsh)
-            re)
-    str)
-  (let* ((regy (pregexp re))
+  (if (not (and (string? str)
+                (hash-table? hsh)
+                re))
+    str
+    (let* ((regy (pregexp re))
          (vars (remove-bad-matches (match-regexp regy str) delim))
          (newstr (pregexp-replace* regy (make-format-safe str) fmt))
          (set-vars []))
@@ -310,9 +383,9 @@
           (set! set-vars (cons val set-vars)))))
     (dp (format "hash-interpol: string: |~a| set-vars: |~a| newstr: |~a|" str set-vars newstr))
     (try
-     (apply format newstr set-vars)
+     (apply format newstr (reverse set-vars))
      (catch (e)
-       str))))
+       str)))))
 
 (def (interpol-from-env str)
   (if (not (string? str))
@@ -327,95 +400,97 @@
             (error "Error: Variable " var " is used in the template, but not defined in the environment")
             (set! set-vars (cons val set-vars)))))
       (dp (format "interpol-from-env: string: ~a set-vars: ~a newstr: ~a" str set-vars newstr))
-      (apply format newstr set-vars))))
+      (apply format newstr (reverse set-vars)))))
 
 (def (match-regexp pat str . opt-args)
-  "Like pregexp-match but for all matches til end of str"
+  "Like pregexp-match but for all matches til end of str.
+   Returns a list of captured group strings (or full match when no groups)."
   (let ((n (string-length str))
-        (ix-prs []))
+        (results []))
     (if (= n 0)
       []
       (let lp ((start 0))
         (let* ((pp (pregexp-match-positions pat str start n))
                (ix-pr (pregexp-match pat str start n)))
           (if ix-pr
-            (let ((pos (+ 1 (cdar pp))))
-              (set! ix-prs (flatten (cons ix-pr ix-prs)))
+            (let ((pos (+ 1 (cdar pp)))
+                  (capture (if (> (length ix-pr) 1)
+                             (cdr ix-pr)
+                             ix-pr)))
+              (set! results (append results capture))
               (if (< pos n)
                 (lp pos)
-                ix-prs))
-            (reverse ix-prs)))))))
+                results))
+            results))))))
 
 (def (style-output infos (style "org-mode"))
-  (when JSON
-    (exit 0))
-  (when (list? infos)
-    (let* ((sizes (hash))
-           (data (reverse infos))
-           (header (car data))
-           (rows (cdr data))
-           (sorted #f)
-           (header-sep "|"))
+  (unless JSON
+    (when (list? infos)
+      (let* ((sizes (hash))
+             (data (reverse infos))
+             (header (car data))
+             (rows (cdr data))
+             (sorted #f)
+             (header-sep "|"))
 
-      (for (head header)
-        (unless (string? head)
-          (displayln "head is not string: " head)
-          (exit 2))
-        (hash-put! sizes head (string-length head)))
-      (for (row rows)
-        (let (count 0)
-          (for (column row)
-            (let* ((col-name (nth count header))
-                   (current-size (hash-ref sizes col-name))
-                   (this-size (if (string? column) (string-length column) (string-length (format "~a" column)))))
-              (when (> this-size current-size)
-                (hash-put! sizes col-name this-size))
-              (set! count (1+ count))))))
-
-      (cond
-       ((string=? style "org-mode")
-        (set! header-sep "| ")
-        (set! sorted #t))
-       ((string=? style "confluence-markdown")
-        (set! header-sep "||")))
-
-      (for (head header)
-        (display
-         (format "~a~a" header-sep
-                 (format-string-size
-                  head
-                  (hash-get sizes head)))))
-
-      ;; print header
-      (displayln header-sep)
-      (let ((count 0))
         (for (head header)
-          (let ((sep (if (= count 0) "|" "+")))
-            (display
-             (format "~a~a"
-                     sep
-                     (make-string
-                      (+ 2
-                         (hash-get sizes
-                                   (nth count header))) #\-))))
-          (set! count (1+ count))))
-      (displayln "|")
+          (unless (string? head)
+            (error "style-output: header element is not a string" head))
+          (hash-put! sizes head (string-length head)))
+        (for (row rows)
+          (let (count 0)
+            (for (column row)
+              (let* ((col-name (nth count header))
+                     (current-size (hash-ref sizes col-name))
+                     (this-size (if (string? column) (string-length column) (string-length (format "~a" column)))))
+                (when (> this-size current-size)
+                  (hash-put! sizes col-name this-size))
+                (set! count (1+ count))))))
 
-      (for (row (sort rows compare-lst-car))
-        (let (count 0)
-          (for (col row)
-            (display
-             (format "| ~a"
-                     (format-string-size
-                      col
-                      (hash-ref sizes (nth count header)))))
+        (cond
+         ((string=? style "org-mode")
+          (set! header-sep "| ")
+          (set! sorted #t))
+         ((string=? style "confluence-markdown")
+          (set! header-sep "||")))
+
+        (for (head header)
+          (display
+           (format "~a~a" header-sep
+                   (format-string-size
+                    head
+                    (hash-get sizes head)))))
+
+        ;; print header
+        (displayln header-sep)
+        (let ((count 0))
+          (for (head header)
+            (let ((sep (if (= count 0) "|" "+")))
+              (display
+               (format "~a~a"
+                       sep
+                       (make-string
+                        (+ 2
+                           (hash-get sizes
+                                     (nth count header))) #\-))))
             (set! count (1+ count))))
-        (displayln "|"))
-      )))
+        (displayln "|")
+
+        (for (row (sort rows compare-lst-car))
+          (let (count 0)
+            (for (col row)
+              (display
+               (format "| ~a"
+                       (format-string-size
+                        col
+                        (hash-ref sizes (nth count header)))))
+              (set! count (1+ count))))
+          (displayln "|"))
+        ))))
 
 
 (def (compare-lst-car a b)
-  (string=? (car a) (car b)))
+  (string<? (car a) (car b)))
 
 (def (print-header style header)
   (cond
@@ -440,7 +515,8 @@
 (def (org-mode-print-row data)
   (when (list? data)
     (for (datum data)
-      (displayln "|"))))
+      (display (format "| ~a " datum)))
+    (displayln "|")))
 
 (def (date->custom dt)
   (date->string (string->date dt "~Y-~m-~dT~H:~M:~S~z") "~a ~b ~d ~Y"))
@@ -468,8 +544,8 @@
     0)
    ((boolean? num)
     (if num
-      0
-      1))
+      1
+      0))
    (else 0)))
 
 (def (sis item)
@@ -478,12 +554,7 @@
     "N/A"))
 
 (def (filter-headers headers fields)
-  (let ((ours headers))
-    (for (header headers)
-      (unless (member header fields)
-        (displayln "removing " header)
-        (delete! header ours)))
-    ours))
+  (filter (lambda (header) (member header fields)) headers))
 
 (def (filter-row name value headers)
   (when (member name headers)
@@ -517,11 +588,11 @@
               (write-hex (##fxand byte #xf))))
             (lp (##fx+ n 1)))))))
 
-  (let* ((uri-encoding (make-uri-encoding-table uri-unreserved-chars))
-         (safe-word (write-uri-encoded str uri-encoding)))
-    (if (string? safe-word)
-      safe-word
-      str)))
+  (let ((uri-encoding (make-uri-encoding-table uri-unreserved-chars)))
+    (call-with-output-string
+      (lambda (port)
+        (parameterize ((current-output-port port))
+          (write-uri-encoded str uri-encoding))))))
 
 (def (get-if-set-b64 var alt)
   "Return the value of an env var if it is set, decoded from b64, else return alt"
